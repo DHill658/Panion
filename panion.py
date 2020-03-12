@@ -10,8 +10,8 @@ import random
 ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
-WIDTH = 600
-HEIGHT = 600
+WIDTH = 800
+HEIGHT = 800
 
 FPS = 60
 
@@ -32,6 +32,7 @@ class Game:
         pygame.display.set_caption("Panion")
         pygame.display.set_icon(pygame.image.load("assets/icon.png"))
 
+        pygame.init()
         self.startup()
 
     def __str__(self):
@@ -54,10 +55,7 @@ class Game:
         Contains the main game loop
         :return: None
         """
-        pygame.init()
         running = True
-        # run startup sequence (starting menus)
-        # self.startup()
         # start the game clock
         self.add_clock()
         # main game loop
@@ -77,19 +75,32 @@ class Game:
         Runs the startup sequence
         :return: None
         """
+        # sets the background colour
+        self.MAIN_SURF.fill((220, 200, 210))
+        # updates the display
+        pygame.display.update()
         self.startrun = True
-        self.menu("start")
+        # creates a start menu
+        self.menu("petchoice")
         # loops starting menus until the main game loop starts
-        print("menu created")
         while self.startrun:
-            print("looping")
+            # checks for events
             self.event_handler()
+            # updates the display
+            pygame.display.update()
 
     def event_handler(self):
         """
         Handles all events created by the user
         :return: None
         """
+        # for all the events that occur per loop:
+        for event in pygame.event.get():
+            # if the event is clicking the exit button:
+            if event.type == QUIT:
+                # stop both loops so that the program can quit
+                self.startrun = False
+                self.running = False
 
     def end(self):
         """
@@ -301,7 +312,6 @@ class Menu:
         self.text = []
         self.surface = surface
         self.calc_buttons()
-        self.buttons[0].draw((300, 300))
 
     def __str__(self):
         """
@@ -316,32 +326,67 @@ class Menu:
         :return: None
         """
         if self.menu == "start":
+            # add all of the parts of the menu
             self.add_decoration("logo")  # panion logo at top
             self.add_button("buttonnew")
             self.add_button("buttonold")
             self.add_button("buttonsettings")
-            # self.add_decoration("pets")  # sample pets
-            # TODO: place all in correct place
-            print(str(self.buttons[0]))
-            print(str(self.decorations[0]))
+            # change the size of all the buttons
+            for i in range(len(self.buttons)):
+                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+            # change the size of the logo
+            self.decorations[0].set_sprite(pygame.transform.rotozoom(self.decorations[0].get_sprite(), 0, 0.5))
+            # x value for centering buttons
+            x = WIDTH//2 - self.buttons[0].get_sprite().get_width()//2
+            # draw all of the parts of the menu in the correct places
+            self.decorations[0].draw(((WIDTH//2 - self.decorations[0].get_sprite().get_width()//2), 5))
+            self.buttons[0].draw((x, 275))
+            self.buttons[1].draw((x, 425))
+            self.buttons[2].draw((x, 575))
         elif self.menu == "oldpet":
+            # add all parts of the menu
             self.add_button("buttonback")
             self.add_text()
             self.add_button("buttonplay")
-            # TODO: place all in correct place
+            # scaling all of the buttons
+            for i in range(len(self.buttons)):
+                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+            # scaling the text box
+            self.text[0].set_sprite(pygame.transform.rotozoom(self.text[0].get_sprite(), 0, 0.75))
+            # drawing all parts of the menu
+            self.buttons[0].draw((100, 575))
+            self.buttons[1].draw((400, 575))
+            self.text[0].draw((WIDTH//2 - self.text[0].get_sprite().get_width()//2, HEIGHT//2))
         elif self.menu == "petchoice":
+            # add all parts of the menu
             self.add_decoration("choosepet")
-            self.add_button("catsprite")
-            self.add_button("dogsprite")
-            self.add_button("ducksprite")
+            self.add_button("cat")
+            self.add_button("dog")
+            self.add_button("duck")
             self.add_button("buttonnext")
-            # TODO: place all in correct place
+            # scaling of buttons
+            self.buttons[3].set_sprite(pygame.transform.rotozoom(self.buttons[3].get_sprite(), 0, 0.4))
+            # scaling the text
+            self.decorations[0].set_sprite(pygame.transform.rotozoom(self.decorations[0].get_sprite(), 0, 0.5))
+            # x value for centering buttons
+            x = WIDTH//2 - self.buttons[3].get_sprite().get_width()//2
+            # drawing all parts of the menu
+            self.decorations[0].draw((WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, 60))
+            self.buttons[0].draw((WIDTH//4 - self.buttons[0].get_sprite().get_width()//2, HEIGHT//2 - 55))
+            self.buttons[1].draw((WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT//2 - 20))
+            self.buttons[2].draw((WIDTH - WIDTH//4 - self.buttons[0].get_sprite().get_width()//2, HEIGHT//2 - 40))
+            self.buttons[3].draw((x, 600))
         elif self.menu == "namepet":
             self.add_button("buttonsettings")
             # TODO: self.add_decoration([the pet they chose])
             self.add_text()
             self.add_button("buttondone")
-            # TODO: place all in correct place
+            # scale the buttons
+
+            # scale text
+
+            # draw all parts of menu
+
         elif self.menu == "pause":
             self.add_decoration("paused")
             self.add_button("buttonresume")
@@ -452,7 +497,6 @@ class Item:
         :return: None
         """
         self.surface.blit(self.sprite, pos)
-        print("blitty doo da")
 
     def format_image(self, image):
         """
@@ -463,6 +507,13 @@ class Item:
             return "assets/" + image + ".png"
         ends = ["cat", "dog"]
         return "assets/" + image + random.choice(ends) + ".png"
+
+    def get_sprite(self):
+        """
+        Returns the value of self.sprite
+        :return: self.sprite
+        """
+        return self.sprite
 
     def set_sprite(self, sprite):
         """
