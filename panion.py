@@ -382,11 +382,14 @@ class Menu:
             self.add_text()
             self.add_button("buttondone")
             # scale the buttons
-
+            for i in range(len(self.buttons)):
+                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
             # scale text
-
+            self.text[0].set_sprite(pygame.transform.rotozoom(self.text[0].get_sprite(), 0, 0.75))
             # draw all parts of menu
-
+            self.buttons[0].draw((WIDTH - (20 + self.buttons[0].get_sprite().get_width()//2), 20 + self.buttons[0].get_sprite().get_height()//2))
+            self.buttons[1].draw((WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT - 30))
+            self.text[0].draw((WIDTH//2 - self.text[0].get_sprite().get_width()//2, HEIGHT - (60 + self.text[0].get_sprite().get_height()//2)))
         elif self.menu == "pause":
             self.add_decoration("paused")
             self.add_button("buttonresume")
