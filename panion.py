@@ -81,7 +81,7 @@ class Game:
         pygame.display.update()
         self.startrun = True
         # creates a start menu
-        self.menu("petchoice")
+        self.menu("pause")
         # loops starting menus until the main game loop starts
         while self.startrun:
             # checks for events
@@ -377,8 +377,9 @@ class Menu:
             self.buttons[2].draw((WIDTH - WIDTH//4 - self.buttons[0].get_sprite().get_width()//2, HEIGHT//2 - 40))
             self.buttons[3].draw((x, 600))
         elif self.menu == "namepet":
+            # add all parts of the menu
             self.add_button("buttonsettings")
-            # TODO: self.add_decoration([the pet they chose])
+            self.add_decoration("cat")  # TODO: add extra variables when doing the clicked method that allow this to change with the chosen pet
             self.add_text()
             self.add_button("buttondone")
             # scale the buttons
@@ -387,15 +388,24 @@ class Menu:
             # scale text
             self.text[0].set_sprite(pygame.transform.rotozoom(self.text[0].get_sprite(), 0, 0.75))
             # draw all parts of menu
-            self.buttons[0].draw((WIDTH - (20 + self.buttons[0].get_sprite().get_width()//2), 20 + self.buttons[0].get_sprite().get_height()//2))
-            self.buttons[1].draw((WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT - 30))
-            self.text[0].draw((WIDTH//2 - self.text[0].get_sprite().get_width()//2, HEIGHT - (60 + self.text[0].get_sprite().get_height()//2)))
+            self.buttons[0].draw((WIDTH - (160 + self.buttons[0].get_sprite().get_width()//2), 5))
+            self.buttons[1].draw((WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT - 200))
+            self.decorations[0].draw((WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, HEIGHT - 550))
+            self.text[0].draw((WIDTH//2 - self.text[0].get_sprite().get_width()//2, HEIGHT - (300 + self.text[0].get_sprite().get_height()//2)))
         elif self.menu == "pause":
+            # add all parts of the menu
             self.add_decoration("paused")
             self.add_button("buttonresume")
             self.add_button("buttonsettings")
             self.add_button("buttonquit")
-            # TODO: place all in correct place
+            # scale the buttons
+            for i in range(len(self.buttons)):
+                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+            # draw all parts of menu
+            self.decorations[0].draw((WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, 20))
+            self.buttons[0].draw((WIDTH//2 - self.buttons[0].get_sprite().get_width()//2, 300))
+            self.buttons[1].draw((WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, 450))
+            self.buttons[2].draw((WIDTH//2 - self.buttons[2].get_sprite().get_width()//2, 600))
         elif self.menu == "settings":
             self.add_decoration("settings")
             self.add_button("volume")
@@ -484,7 +494,7 @@ class Menu:
 class Item:
     def __init__(self, surface):
         self.sprite = ""
-        self.position = (0, 0)
+        self.position = [0, 0]
         self.surface = surface
 
     def __str__(self):
@@ -494,12 +504,12 @@ class Item:
         """
         return "ITEM CLASS - \nSprite: " + str(self.sprite) + "\nPosition: " + str(self.position)
 
-    def draw(self, pos):
+    def draw(self):
         """
         Draws the Item onto the screen, onto a certain surface, in a certain position
         :return: None
         """
-        self.surface.blit(self.sprite, pos)
+        self.surface.blit(self.sprite, self.position)
 
     def format_image(self, image):
         """
@@ -533,6 +543,22 @@ class Item:
         :return: None
         """
         self.position = pos
+
+    def set_xpos(self, pos):
+        """
+        Changes the x position of the Item
+        :param pos: x position
+        :return: None
+        """
+        self.position[0] = pos
+
+    def set_ypos(self, pos):
+        """
+        Changes the y position of the Item
+        :param pos: y position
+        :return: None
+        """
+        self.position[1] = pos
 
     def get_pos(self):
         """
@@ -739,6 +765,7 @@ class Interactable(Item):
             # TODO: include functionality for these
         if "button" in self.action:
             self.button(self.action)
+        # TODO: add variables that hold information on what has been chosen in the starting menus
 
     def button(self, action):
         """
