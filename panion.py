@@ -81,7 +81,7 @@ class Game:
         pygame.display.update()
         self.startrun = True
         # creates a start menu
-        self.menu("playthirst")
+        self.menu("start")
         # loops starting menus until the main game loop starts
         while self.startrun:
             # checks for events
@@ -101,6 +101,14 @@ class Game:
                 # stop both loops so that the program can quit
                 self.startrun = False
                 self.running = False
+            elif event.type == MOUSEBUTTONUP:
+                for interactable in self.interactables:
+                    if interactable.collidepoint(pygame.mouse.get_pos()):
+                        interactable.clicked(pygame.mouse.get_pos())
+                for pet in self.pets:
+                    if pet.collidepoint(pygame.mouse.get_pos()):
+                        pet.clicked(pygame.mouse.get_pos())
+
 
     def end(self):
         """
@@ -333,9 +341,11 @@ class Menu:
             self.add_button("buttonsettings")
             # change the size of all the buttons
             for i in range(len(self.buttons)):
-                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # change the size of the logo
-            self.decorations[0].set_sprite(pygame.transform.rotozoom(self.decorations[0].get_sprite(), 0, 0.5))
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
             # x value for centering buttons
             x = WIDTH//2 - self.buttons[0].get_sprite().get_width()//2
             # set positions of all menu parts
@@ -355,9 +365,11 @@ class Menu:
             self.add_button("buttonplay")
             # scaling all of the buttons
             for i in range(len(self.buttons)):
-                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # scaling the text box
-            self.text[0].set_sprite(pygame.transform.rotozoom(self.text[0].get_sprite(), 0, 0.75))
+            text = self.text[0].get_sprite()
+            self.text[0].set_sprite(pygame.transform.scale(text, (int(text.get_width() * 0.75), int(text.get_height() * 0.75))))
             # set positions of all menu parts
             self.buttons[0].set_pos([100, 575])
             self.buttons[1].set_pos([400, 575])
@@ -374,9 +386,11 @@ class Menu:
             self.add_button("duck")
             self.add_button("buttonnext")
             # scaling of buttons
-            self.buttons[3].set_sprite(pygame.transform.rotozoom(self.buttons[3].get_sprite(), 0, 0.4))
+            button = self.buttons[3].get_sprite()
+            self.buttons[3].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # scaling the text
-            self.decorations[0].set_sprite(pygame.transform.rotozoom(self.decorations[0].get_sprite(), 0, 0.5))
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
             # x value for centering buttons
             x = WIDTH//2 - self.buttons[3].get_sprite().get_width()//2
             # set positions of all menu parts
@@ -399,9 +413,11 @@ class Menu:
             self.add_button("buttondone")
             # scale the buttons
             for i in range(len(self.buttons)):
-                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # scale text
-            self.text[0].set_sprite(pygame.transform.rotozoom(self.text[0].get_sprite(), 0, 0.75))
+            text = self.text[0].get_sprite()
+            self.text[0].set_sprite(pygame.transform.scale(text, (int(text.get_width() * 0.75), int(text.get_height() * 0.75))))
             # set positions of all parts of menu
             self.buttons[0].set_pos([WIDTH - (160 + self.buttons[0].get_sprite().get_width()//2), 5])
             self.buttons[1].set_pos([WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT - 200])
@@ -420,7 +436,8 @@ class Menu:
             self.add_button("buttonquit")
             # scale the buttons
             for i in range(len(self.buttons)):
-                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # set positions of all parts of menu
             self.decorations[0].set_pos([WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, 20])
             self.buttons[0].set_pos([WIDTH//2 - self.buttons[0].get_sprite().get_width()//2, 300])
@@ -439,9 +456,11 @@ class Menu:
             self.add_button("buttondone")
             # scale the buttons
             for i in range(len(self.buttons)):
-                self.buttons[i].set_sprite(pygame.transform.rotozoom(self.buttons[i].get_sprite(), 0, 0.4))
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
             # scale settings text
-            self.decorations[0].set_sprite(pygame.transform.rotozoom(self.decorations[0].get_sprite(), 0, 0.4))
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.4), int(deco.get_height() * 0.4))))
             # x value for centering buttons
             x = WIDTH//2 - self.buttons[0].get_sprite().get_width()//2
             # set positions of all parts of menu
@@ -454,7 +473,8 @@ class Menu:
             # add all parts of menu
             self.add_button("buttonpause")
             # scale the buttons
-            self.buttons[0].set_sprite(pygame.transform.rotozoom(self.buttons[0].get_sprite(), 0, 0.2))
+            button = self.buttons[0].get_sprite()
+            self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
             # set positions of all parts of menu
             self.buttons[0].set_pos([-25, 3])
             # draw all parts of menu
@@ -464,7 +484,8 @@ class Menu:
             self.add_button("buttonpause")
             self.add_decoration("thirst")
             # scale the buttons
-            self.buttons[0].set_sprite(pygame.transform.rotozoom(self.buttons[0].get_sprite(), 0, 0.2))
+            button = self.buttons[0].get_sprite()
+            self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
             # scale decorations
             deco_pic = self.decorations[0].get_sprite()
             self.decorations[0].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 4, deco_pic.get_height() * 4)))
@@ -479,12 +500,39 @@ class Menu:
             self.add_button("buttonpause")
             self.add_decoration("hunger")
             # scale the buttons
-            # TODO: do the scales
-        elif self.menu == "playmain":
+            button = self.buttons[0].get_sprite()
+            self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
+            # scale the decoration
+            deco_pic = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 5, deco_pic.get_height() * 5)))
+            # set positions for all parts of menu
+            self.buttons[0].set_pos([-25, 3])
+            self.decorations[0].set_pos([720, 5])
+            # draw all parts of menu
+            self.buttons[0].draw()
+            self.decorations[0].draw()
+        elif self.menu == "playmaln":
+            # add all parts of the menu
             self.add_button("buttonpause")
             self.add_decoration("thirst")
             self.add_decoration("hunger")
-            # TODO: place all in correct place
+            # scale the buttons
+            for i in range(len(self.buttons)):
+                button = self.buttons[i].get_sprite()
+                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
+            # scale the decorations
+            deco_pic0 = self.decorations[0].get_sprite()
+            deco_pic1 = self.decorations[1].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco_pic0, (deco_pic0.get_width() * 4, deco_pic0.get_height() * 4)))
+            self.decorations[1].set_sprite(pygame.transform.scale(deco_pic1, (deco_pic1.get_width() * 5, deco_pic1.get_height() * 5)))
+            # set positions for all parts of menu
+            self.buttons[0].set_pos([-25, 3])
+            self.decorations[0].set_pos([740, 5])
+            self.decorations[1].set_pos([670, 1])
+            # draw all parts of menu
+            self.buttons[0].draw()
+            self.decorations[0].draw()
+            self.decorations[1].draw()
         else:
             pass
 
@@ -516,6 +564,8 @@ class Menu:
         :param button: Function of the new button
         :return: None
         """
+        # data = Interactable(button, button, self.surface) if not pet_chosen else Interactable(button, button, self.surface), pet
+        # self.buttons.append(*data)
         self.buttons.append(Interactable(button, button, self.surface))
 
     def get_decorations(self):
