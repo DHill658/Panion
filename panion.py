@@ -28,12 +28,14 @@ class Game:
         self.secs = 0
         self.mins = 0
         self.hours = 0
+        self.text_active = False
         self.MAIN_SURF = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Panion")
         pygame.display.set_icon(pygame.image.load("assets/icon.png"))
 
         pygame.init()
         self.startup()
+        self.run()
 
     def __str__(self):
         """
@@ -42,24 +44,43 @@ class Game:
         """
         return "GAME CLASS - \nRunning: " + str(self.running) + "\nInteractables: " + str(self.interactables) + "\nDecorations: " + str(self.decorations) + "\nPets: " + str(self.pets) + "\nMenus: " + str(self.menus) + "\nClocks: " + str(self.clocks)
 
+    def clear_screen(self):
+        """
+        Clears the screen for new objects to be drawn
+        :return: None
+        """
+        self.MAIN_SURF.fill((220, 200, 210))
+
+    def redraw(self):
+        """
+        Redraws everything on the screen
+        :return: None
+        """
+        [i.draw() for i in self.interactables]
+        [d.draw() for d in self.decorations]
+        [p.draw() for p in self.pets]
+        [b.draw() for b in self.menus[0].get_buttons()]
+        [dm.draw() for dm in self.menus[0].get_decorations()]
+        [t.draw() for t in self.menus[0].get_text()]
+
     def menu(self, menu):
         """
         Creates an instance of Menu with specific buttons based on the type
         :param menu: the type of menu, which dictates the buttons within it
         :return: None
         """
-        self.add_menu(menu)
+        self.menus.append(Menu(menu, self.MAIN_SURF, self))
 
     def run(self):
         """
         Contains the main game loop
         :return: None
         """
-        running = True
+        self.running = True
         # start the game clock
         self.add_clock()
         # main game loop
-        while running:
+        while self.running:
             # check for events
             self.event_handler()
             # tick the clock
@@ -67,6 +88,7 @@ class Game:
             # change real time to 'game time' and check repeated actions
             for i in self.pets:
                 i.check_repeat(self.correct_time(), "eat")
+            pygame.display.update()
         # once main loop is finished, end the game
         self.end()
 
@@ -101,14 +123,68 @@ class Game:
                 # stop both loops so that the program can quit
                 self.startrun = False
                 self.running = False
+            # if the mouse is clicked (on the up of the click)
             elif event.type == MOUSEBUTTONUP:
-                for interactable in self.interactables:
-                    if interactable.collidepoint(pygame.mouse.get_pos()):
-                        interactable.clicked(pygame.mouse.get_pos())
+                # if a text box is active
+                if self.text_active:
+                    # de-activate the text box
+                    self.text_active = False
+                    if self.menus[0].get_text():
+                        sprite = pygame.image.load(self.menus[0].get_text()[0].format_image("textbox"))
+                        self.menus[0].get_text()[0].set_sprite(pygame.transform.scale(sprite, (int(sprite.get_width() * 0.75), int(sprite.get_height() * 0.75))))
+                        self.redraw()
+                        self.menus[0].get_text()[0].text_render()
+                # for all the buttons in the current menu...
+                for button in self.menus[0].get_buttons():
+                    # create a rect at the same position as the button
+                    rect = button.get_sprite().get_rect().move(button.get_pos())
+                    # check if the mouse is there
+                    if rect.collidepoint(pygame.mouse.get_pos()):
+                        # if it is, run clicked() for that button
+                        button.clicked(pygame.mouse.get_pos())
+                # for all text boxes in the current menu...
+                for text in self.menus[0].get_text():
+                    # create a rect at the same position as the text box
+                    rect = text.get_sprite().get_rect().move(text.get_pos())
+                    # check if the mouse is there
+                    if rect.collidepoint(pygame.mouse.get_pos()):
+                        # if it is, run clicked() for the text box
+                        text.clicked(pygame.mouse.get_pos())
+                # for all the pets currently in use...
                 for pet in self.pets:
-                    if pet.collidepoint(pygame.mouse.get_pos()):
+                    # create a rect at their position
+                    rect = pet.get_sprite().get_rect().move(pet.get_pos())
+                    # check if the mouse is there
+                    if rect.collidepoint(pygame.mouse.get_pos()):
+                        # if it is, run clicked() for that pet
                         pet.clicked(pygame.mouse.get_pos())
 
+            # if a key is pressed
+            elif event.type == KEYDOWN:
+                # if a text box is active
+                if self.text_active:
+                    # if the letter is valid
+                    if event.unicode in ALPHABET:
+                        # add it to the text box's content
+                        self.menus[0].get_text()[0].add_content(event.unicode)
+                    # if the key is a backspace
+                    elif event.key == K_BACKSPACE:
+                        # remove a character
+                        self.menus[0].get_text()[0].remove_content()
+                        # redraw the screen
+                        self.redraw()
+                    # re-render the text
+                    self.menus[0].get_text()[0].text_render()
+                    # if the key pressed is escape
+                    if event.key == K_ESCAPE:
+                        # de-activate the text box
+                        self.text_active = False
+                        sprite = pygame.image.load(self.menus[0].get_text()[0].format_image("textbox"))
+                        self.menus[0].get_text()[0].set_sprite(pygame.transform.scale(sprite, (int(sprite.get_width() * 0.75), int(sprite.get_height() * 0.75))))
+                        self.redraw()
+                        self.menus[0].get_text()[0].text_render()
+                else:
+                    pass
 
     def end(self):
         """
@@ -154,7 +230,7 @@ class Game:
         :param action: The action performed when the Interactable is clicked on
         :return: None
         """
-        self.interactables.append(Interactable(display, action, self.MAIN_SURF))
+        self.interactables.append(Interactable(display, action, self.MAIN_SURF, self))
 
     def remove_interactable(self, index):
         """
@@ -178,7 +254,7 @@ class Game:
         :param display: What the Decorative is/what it looks like
         :return: None
         """
-        self.decorations.append(Decorative(display, self.MAIN_SURF))
+        self.decorations.append(Decorative(display, self.MAIN_SURF, self))
 
     def remove_decorative(self, index):
         """
@@ -196,6 +272,13 @@ class Game:
         """
         return self.pets[index]
 
+    def get_pets(self):
+        """
+        Returns the whole of self.pets
+        :return: self.pets
+        """
+        return self.pets
+
     def add_pet(self, name, animal):
         """
         Adds a new instance of the Pet class to the array self.pets
@@ -203,7 +286,7 @@ class Game:
         :param animal: What animal the pet is
         :return: None
         """
-        self.pets.append(Pet(name, animal, self.MAIN_SURF))
+        self.pets.append(Pet(name, animal, self.MAIN_SURF, self))
 
     def remove_pet(self, index):
         """
@@ -228,21 +311,13 @@ class Game:
         """
         return self.menus
 
-    def add_menu(self, menu):
-        """
-        Adds a new instance of the Menu class to the array self.menus
-        :param menu: Type of menu
-        :return: None
-        """
-        self.menus.append(Menu(menu, self.MAIN_SURF))
-
-    def remove_menu(self, index):
+    def remove_menus(self):
         """
         Removes a specific instance of the Menu class
         :param index: The index of the desired instance
         :return: None
         """
-        self.menus.remove(index)
+        self.menus.clear()
 
     def get_clock(self, index):
         """
@@ -290,19 +365,21 @@ class Game:
         # return hours mins and secs
         return [self.hours, self.mins, self.secs]
 
-    def swap_running(self):
+    def set_running(self, boolean):
         """
-        Swaps the running attribute to the opposite of what it was
+        Sets the value of running to the given boolean
+        :param boolean: Given boolean value
         :return: None
         """
-        self.running = not self.running
+        self.running = boolean
 
-    def swap_startrun(self):
+    def set_startrun(self, boolean):
         """
-        Swaps the selfrun attribute to the opposite of what it was
+        Sets the value of startrun to the given boolean
+        :param boolean: Given boolean value
         :return: None
         """
-        self.startrun = not self.startrun
+        self.startrun = boolean
 
     def get_surf(self):
         """
@@ -311,14 +388,44 @@ class Game:
         """
         return self.MAIN_SURF
 
+    def get_startrun(self):
+        """
+        Returns the startrun attribute
+        :return: self.startrun
+        """
+        return self.startrun
+
+    def get_running(self):
+        """
+        Returns the running attribute
+        :return: self.running
+        """
+        return self.running
+
+    def get_text_active(self):
+        """
+        Returns self.text_active
+        :return: self.text_active
+        """
+        return self.text_active
+
+    def set_text_active(self, boolean):
+        """
+        Sets the value of self.text_active to the given boolean
+        :param boolean: the given boolean
+        :return: None
+        """
+        self.text_active = boolean
+
 
 class Menu:
-    def __init__(self, menu, surface):
+    def __init__(self, menu, surface, game_inst):
         self.menu = menu
         self.buttons = []
         self.decorations = []
         self.text = []
         self.surface = surface
+        self.game_inst = game_inst
         self.calc_buttons()
 
     def __str__(self):
@@ -407,7 +514,6 @@ class Menu:
             self.buttons[3].draw()
         elif self.menu == "namepet":
             # add all parts of the menu
-            self.add_button("buttonsettings")
             self.add_decoration("cat")  # TODO: add extra variables when doing the clicked method that allow this to change with the chosen pet
             self.add_text()
             self.add_button("buttondone")
@@ -419,13 +525,11 @@ class Menu:
             text = self.text[0].get_sprite()
             self.text[0].set_sprite(pygame.transform.scale(text, (int(text.get_width() * 0.75), int(text.get_height() * 0.75))))
             # set positions of all parts of menu
-            self.buttons[0].set_pos([WIDTH - (160 + self.buttons[0].get_sprite().get_width()//2), 5])
-            self.buttons[1].set_pos([WIDTH//2 - self.buttons[1].get_sprite().get_width()//2, HEIGHT - 200])
+            self.buttons[0].set_pos([WIDTH//2 - self.buttons[0].get_sprite().get_width()//2, HEIGHT - 200])
             self.decorations[0].set_pos([WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, HEIGHT - 550])
             self.text[0].set_pos([WIDTH//2 - self.text[0].get_sprite().get_width()//2, HEIGHT - (300 + self.text[0].get_sprite().get_height()//2)])
             # draw all parts of menu
             self.buttons[0].draw()
-            self.buttons[1].draw()
             self.decorations[0].draw()
             self.text[0].draw()
         elif self.menu == "pause":
@@ -533,8 +637,6 @@ class Menu:
             self.buttons[0].draw()
             self.decorations[0].draw()
             self.decorations[1].draw()
-        else:
-            pass
 
     def get_menu(self):
         """
@@ -566,7 +668,7 @@ class Menu:
         """
         # data = Interactable(button, button, self.surface) if not pet_chosen else Interactable(button, button, self.surface), pet
         # self.buttons.append(*data)
-        self.buttons.append(Interactable(button, button, self.surface))
+        self.buttons.append(Interactable(button, button, self.surface, self.game_inst))
 
     def get_decorations(self):
         """
@@ -581,7 +683,7 @@ class Menu:
         :param decoration: Type of new decoration
         :return: None
         """
-        self.decorations.append(Decorative(decoration, self.surface))
+        self.decorations.append(Decorative(decoration, self.surface, self.game_inst))
 
     def get_text(self):
         """
@@ -595,14 +697,15 @@ class Menu:
         Adds an instance of the Text class to self.text
         :return: None
         """
-        self.text.append(Text(self.surface))
+        self.text.append(Text(self.surface, self.game_inst))
 
 
 class Item:
-    def __init__(self, surface):
+    def __init__(self, surface, game_inst):
         self.sprite = ""
         self.position = [0, 0]
         self.surface = surface
+        self.game_inst = game_inst
 
     def __str__(self):
         """
@@ -623,10 +726,17 @@ class Item:
         Takes a string and changes it into a file path for loading with pygame.image.load
         :return: image file path
         """
+        # if not a button...
         if "button" not in image:
+            # return with a normal path
             return "assets/" + image + ".png"
-        ends = ["cat", "dog"]
-        return "assets/" + image + random.choice(ends) + ".png"
+        # if there are no current pets
+        if not self.game_inst.get_pets():
+            # random button
+            ends = ["cat", "dog"]
+            return "assets/" + image + random.choice(ends) + ".png"
+        # if there is a current pet, use this pet's buttons
+        return "assets/" + image + str(self.game_inst.get_pet(0).get_animal()) + ".png"
 
     def get_sprite(self):
         """
@@ -682,8 +792,8 @@ class Item:
 
 
 class Pet(Item):
-    def __init__(self, name, animal, surface):
-        super().__init__(surface)
+    def __init__(self, name, animal, surface, game_inst):
+        super().__init__(surface, game_inst)
         self.name = name
         self.animal = animal
         self.sprite = pygame.image.load(self.format_image(self.animal))
@@ -829,8 +939,8 @@ class Pet(Item):
 
 
 class Interactable(Item):
-    def __init__(self, display, action, surface):
-        super().__init__(surface)
+    def __init__(self, display, action, surface, game_inst):
+        super().__init__(surface, game_inst)
         self.display = display
         self.action = action
         self.sprite = pygame.image.load(self.format_image(display))
@@ -848,15 +958,15 @@ class Interactable(Item):
         :return: None
         """
         if self.action == "drink":
-            game.get_pet(0).move(pos)
-            game.get_pet(0).set_stat("thirst", 10)
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.get_pet(0).process_emotion(game.get_pet(0).change_emotion())
+            self.game_inst.get_pet(0).move(pos)
+            self.game_inst.get_pet(0).set_stat("thirst", 10)
+            self.game_inst.remove_menus()
+            self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "eat":
-            game.get_pet(0).move(pos)
-            game.get_pet(0).set_stat("hunger", 10)
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.get_pet(0).process_emotion(game.get_pet(0).change_emotion())
+            self.game_inst.get_pet(0).move(pos)
+            self.game_inst.get_pet(0).set_stat("hunger", 10)
+            self.game_inst.remove_menus()
+            self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if "play" in self.action:
             if self.action == "playball":
                 ball = True
@@ -881,40 +991,57 @@ class Interactable(Item):
         :return: None
         """
         if action == "buttonpause":
-            game.add_menu("pause")
+            # TODO: add transparent cover over background
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("pause")
             # TODO: paused = True
         elif action == "buttonplay":
-            game.swap_startrun()
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("playscreen")
-            game.add_clock()
+            self.game_inst.set_startrun(False)
+            self.game_inst.set_running(True)
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("playscreen")
+            self.game_inst.add_clock()
             # TODO: set the clock time to the last time the user had
         elif action == "buttonnew":
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("petchoice")
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("petchoice")
             # TODO: create temp array of pet_info, but might have to create in add_menu()
         elif action == "buttonold":
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("oldpet")
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("oldpet")
         elif action == "buttonquit":
-            game.swap_running()
+            self.game_inst.set_running(False)
         elif action == "buttonnext":
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("namepet")
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("namepet")
         elif action == "buttondone":
             # TODO: send info about pet to DB
-            self.button("buttonplay")
+            if self.game_inst.get_running():
+                self.button("buttonplay")
+            else:
+                if self.game_inst.get_menus()[0].get_text():
+                    self.button("buttonplay")
+                else:
+                    self.game_inst.remove_menus()
+                    self.game_inst.clear_screen()
+                    self.game_inst.menu("start")
         elif action == "buttonresume":
             # TODO: paused = False
+            self.game_inst.set_running(True)
             self.button("buttonplay")
         elif action == "buttonback":
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("start")
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("start")
         elif action == "buttonsettings":
-            [game.remove_menu(i) for i in game.get_menus()]
-            game.add_menu("settings")
-        else:
-            pass
+            self.game_inst.remove_menus()
+            self.game_inst.clear_screen()
+            self.game_inst.menu("settings")
 
     def get_display(self):
         """
@@ -948,8 +1075,8 @@ class Interactable(Item):
 
 
 class Decorative(Item):
-    def __init__(self, display, surface):
-        super().__init__(surface)
+    def __init__(self, display, surface, game_inst):
+        super().__init__(surface, game_inst)
         self.display = display
         self.sprite = pygame.image.load(self.format_image(display))
 
@@ -988,9 +1115,11 @@ class Decorative(Item):
 
 
 class Text(Item):
-    def __init__(self, surface):
-        super().__init__(surface)
+    def __init__(self, surface, game_inst):
+        super().__init__(surface, game_inst)
         self.content = ""
+        self.font = pygame.font.Font(None, 72)
+        self.TXT_SURFACE = self.font.render(self.content, True, pygame.Color("black"))
         self.sprite = pygame.image.load(self.format_image("textbox"))
 
     def __str__(self):
@@ -1005,6 +1134,11 @@ class Text(Item):
         Runs whenever a Text is clicked. Runs the desired function(s)
         :return: None
         """
+        self.game_inst.set_text_active(True)
+        self.sprite = pygame.image.load(self.format_image("textboxactive"))
+        self.sprite = pygame.transform.scale(self.sprite, (int(self.sprite.get_width() * 0.75), int(self.sprite.get_height() * 0.75)))
+        self.game_inst.redraw()
+        self.text_render()
 
     def get_content(self):
         """
@@ -1020,6 +1154,31 @@ class Text(Item):
         :return: None
         """
         self.content = content
+
+    def add_content(self, content):
+        """
+        Appends characters to self.content
+        :param content: content to be added
+        :return: None
+        """
+        self.content += content
+        if len(self.content) > 10:
+            self.remove_content()
+
+    def remove_content(self):
+        """
+        Removes a character from self.content
+        :return: None
+        """
+        self.content = self.content[:-1]
+
+    def text_render(self):
+        """
+        Re-renders the text
+        :return: None
+        """
+        self.TXT_SURFACE = self.font.render(self.content, True, pygame.Color("black"))
+        self.game_inst.get_surf().blit(self.TXT_SURFACE, (self.position[0] + 20, self.position[1] + 90))
 
 
 game = Game()
