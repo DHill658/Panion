@@ -60,10 +60,10 @@ class Game:
         self.clear_screen()
         [i.draw() for i in self.interactables]
         [d.draw() for d in self.decorations]
-        [p.draw() for p in self.pets]
         [b.draw() for b in self.menus[0].get_buttons()]
         [dm.draw() for dm in self.menus[0].get_decorations()]
         [t.draw() for t in self.menus[0].get_text()]
+        [p.draw() for p in self.pets]
 
     def menu(self, menu):
         """
@@ -127,6 +127,7 @@ class Game:
                 self.running = False
             # if the mouse is clicked (on the up of the click)
             elif event.type == MOUSEBUTTONUP:
+                none_clicked = True
                 # if a text box is active
                 if self.text_active:
                     # de-activate the text box
@@ -142,6 +143,7 @@ class Game:
                     rect = text.get_sprite().get_rect().move(text.get_pos())
                     # check if the mouse is there
                     if rect.collidepoint(pygame.mouse.get_pos()):
+                        none_clicked = False
                         # if it is, run clicked() for the text box
                         text.clicked(pygame.mouse.get_pos())
                 # for all the buttons in the current menu...
@@ -150,6 +152,7 @@ class Game:
                     rect = button.get_sprite().get_rect().move(button.get_pos())
                     # check if the mouse is there
                     if rect.collidepoint(pygame.mouse.get_pos()):
+                        none_clicked = False
                         # if it is, run clicked() for that button
                         button.clicked(pygame.mouse.get_pos())
                 # for all the pets currently in use...
@@ -158,9 +161,11 @@ class Game:
                     rect = pet.get_sprite().get_rect().move(pet.get_pos())
                     # check if the mouse is there
                     if rect.collidepoint(pygame.mouse.get_pos()):
+                        none_clicked = False
                         # if it is, run clicked() for that pet
                         pet.clicked(pygame.mouse.get_pos())
-
+                if none_clicked:
+                    self.pets[0].move(pygame.mouse.get_pos())
             # if a key is pressed
             elif event.type == KEYDOWN:
                 # if a text box is active
@@ -325,7 +330,6 @@ class Game:
     def remove_menus(self):
         """
         Removes a specific instance of the Menu class
-        :param index: The index of the desired instance
         :return: None
         """
         self.menus.clear()
@@ -616,14 +620,22 @@ class Menu:
             self.buttons[0].draw()
         elif self.menu == "playscreen":
             # add all parts of menu
+            self.add_decoration("background")
             self.add_button("buttonpause")
             # scale the buttons
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
             button = self.buttons[0].get_sprite()
             self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
             # set positions of all parts of menu
+            self.decorations[0].set_pos([WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, HEIGHT//2 - self.decorations[0].get_sprite().get_height()//2])
             self.buttons[0].set_pos([-25, 3])
+            self.game_inst.get_pets()[0].set_pos([WIDTH//2 - self.game_inst.get_pets()[0].get_sprite().get_width()//2, HEIGHT//2 - self.game_inst.get_pets()[0].get_sprite().get_height()//2])
             # draw all parts of menu
+            # print(self.game_inst.get_pets()[0])
+            self.decorations[0].draw()
             self.buttons[0].draw()
+            self.game_inst.get_pets()[0].draw()
         elif self.menu == "playthirst":
             # add all parts of menu
             self.add_button("buttonpause")
@@ -838,7 +850,7 @@ class Pet(Item):
         self.name = name
         self.animal = animal
         self.sprite = pygame.image.load(self.format_image(self.animal + "sprite"))
-        self.stats = {"happiness": 0, "hunger": 0, "comfort": 0, "anger": 0, "thirst": 0, "energy": 0}
+        self.stats = {"happiness": 5, "hunger": 5, "comfort": 5, "anger": 5, "thirst": 5, "energy": 5}
         self.emotion = "happy"
         self.times = []
 
@@ -855,6 +867,29 @@ class Pet(Item):
         :param pos: Specified position
         :return: None
         """
+        # gets the difference between the coords of the pet and the mouse
+        x = pos[0] - self.position[0]
+        y = pos[1] - self.position[1]
+        background = self.game_inst.get_menus()[0].get_decorations()[0]
+        print("x: " + str(x) +
+              "\ny: " + str(y) +
+              "\nbackground pos: " + str(background.get_pos()))
+        if x > y:
+            gradient = x/y
+            # while the pet has not yet reached the clicked position
+            for x in range(abs(y)):
+                # add to the background's position, the gradient is added to the x so a straight line is followed
+                background.set_pos([background.get_pos()[0] - gradient, background.get_pos()[1] - y/abs(y)])
+                self.game_inst.redraw()
+                pygame.display.update()
+        if y > x:
+            gradient = y/x
+            # while the pet has not yet reached the clicked position
+            for y in range(abs(x)):
+                # add to the background's position, the gradient is added to the y so a straight line is followed
+                background.set_pos([background.get_pos()[0] - x/abs(x), background.get_pos()[1] - gradient])
+                self.game_inst.redraw()
+                pygame.display.update()
 
     def change_emotion(self):
         """
@@ -1086,7 +1121,6 @@ class Interactable(Item):
                     self.game_inst.set_time([data[0][8], data[0][9], data[0][10]])
                     conn.close()
                     # TODO: position and draw the petS
-                    self.game_inst.get_pets()[0].draw()
                 else:
                     # deletes old error messages
                     if self.game_inst.get_decorations():
@@ -1108,6 +1142,7 @@ class Interactable(Item):
                 self.game_inst.remove_menus()
                 self.game_inst.clear_screen()
                 self.game_inst.menu("playscreen")
+
                 self.game_inst.add_clock()
             # TODO: set the clock time to the last time the user had
         elif action == "buttonnew":
