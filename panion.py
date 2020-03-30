@@ -5,6 +5,7 @@ from pygame.locals import *
 import sys
 import sqlite3
 import random
+import math
 
 
 ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
@@ -165,7 +166,7 @@ class Game:
                         # if it is, run clicked() for that pet
                         pet.clicked(pygame.mouse.get_pos())
                 if none_clicked:
-                    self.pets[0].move(pygame.mouse.get_pos())
+                    self.pets[0].travel(pygame.mouse.get_pos())
             # if a key is pressed
             elif event.type == KEYDOWN:
                 # if a text box is active
@@ -861,35 +862,37 @@ class Pet(Item):
         """
         return "PET CLASS - \nSprite: " + str(self.sprite) + "\nPosition: " + str(self.position) + "\nName: " + str(self.name) + "\nAnimal: " + str(self.animal) + "\nStats: " + str(self.stats) + "\nEmotion: " + str(self.emotion) + "\nTimes: " + str(self.times)
 
-    def move(self, pos):
+    def travel(self, pos):
         """
         Moves the Pet to a specified position
         :param pos: Specified position
         :return: None
         """
         # gets the difference between the coords of the pet and the mouse
-        x = pos[0] - self.position[0]
-        y = pos[1] - self.position[1]
+        x = pos[0] - WIDTH//2
+        y = pos[1] - HEIGHT//2
         background = self.game_inst.get_menus()[0].get_decorations()[0]
-        print("x: " + str(x) +
-              "\ny: " + str(y) +
-              "\nbackground pos: " + str(background.get_pos()))
-        if x > y:
-            gradient = x/y
-            # while the pet has not yet reached the clicked position
-            for x in range(abs(y)):
-                # add to the background's position, the gradient is added to the x so a straight line is followed
-                background.set_pos([background.get_pos()[0] - gradient, background.get_pos()[1] - y/abs(y)])
-                self.game_inst.redraw()
-                pygame.display.update()
-        if y > x:
-            gradient = y/x
-            # while the pet has not yet reached the clicked position
-            for y in range(abs(x)):
-                # add to the background's position, the gradient is added to the y so a straight line is followed
-                background.set_pos([background.get_pos()[0] - x/abs(x), background.get_pos()[1] - gradient])
-                self.game_inst.redraw()
-                pygame.display.update()
+        # gets the angle of travel
+        angle = math.atan2(abs(y), abs(x))
+        # gets the x value of a triangle of hypotenuse 1 and angle 'angle'
+        xDiff = math.cos(angle)
+        # gets the y value of a triangle of hypotenuse 1 and angle 'angle'
+        yDiff = math.sin(angle)
+        # gets the distance of travel
+        distance = math.hypot(x, y)
+        # flips the x or y if the mouse is 'behind' the pet in each direction
+        if x < 0:
+            xDiff = -xDiff
+        if y < 0:
+            yDiff = -yDiff
+        # loops for the distance (divided by a factor)
+        for a in range(int(distance)//20):
+            # move the background in the opposite direction of the intended movement direction by xDiff and yDiff (multiplied by a factor)
+            background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
+            # redraw all parts of the screen
+            self.game_inst.redraw()
+            # update the display
+            pygame.display.update()
 
     def change_emotion(self):
         """
@@ -1035,12 +1038,12 @@ class Interactable(Item):
         :return: None
         """
         if self.action == "drink":
-            self.game_inst.get_pet(0).move(pos)
+            self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).set_stat("thirst", 10)
             self.game_inst.remove_menus()
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "eat":
-            self.game_inst.get_pet(0).move(pos)
+            self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).set_stat("hunger", 10)
             self.game_inst.remove_menus()
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
