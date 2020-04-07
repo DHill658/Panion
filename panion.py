@@ -886,9 +886,43 @@ class Pet(Item):
         if y < 0:
             yDiff = -yDiff
         # loops for the distance (divided by a factor)
+        x_edge = False
+        y_edge = False
+        # checks if the pet is at/past the edge and makes sure they are within the bounds
+        if background.get_pos()[0] <= -(background.get_sprite().get_width()-WIDTH//2):
+            background.set_pos([-(background.get_sprite().get_width()-WIDTH//2) + 1, background.get_pos()[1]])
+        if background.get_pos()[1] <= -(background.get_sprite().get_height()-HEIGHT//2):
+            background.set_pos([background.get_pos()[0], -(background.get_sprite().get_height()-HEIGHT//2) + 1])
+        if background.get_pos()[0] >= WIDTH//2:
+            background.set_pos([WIDTH//2 - 1, background.get_pos()[1]])
+        if background.get_pos()[1] >= HEIGHT//2:
+            background.set_pos([background.get_pos()[0], HEIGHT//2 - 1])
+
         for a in range(int(distance)//20):
-            # move the background in the opposite direction of the intended movement direction by xDiff and yDiff (multiplied by a factor)
-            background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
+            # if background.get_pos()[0] > 0 or background.get_pos()[0] < -(background.get_sprite().get_width() - WIDTH):
+            #     # self.set_pos([self.position[0] - (xDiff * 20), self.position[1]])
+            #     x_edge = True
+            #     background.set_pos([0, background.get_pos()[1]])
+            # if background.get_pos()[1] > 0 or background.get_pos()[1] < -(background.get_sprite().get_height() - HEIGHT):
+            #     # self.set_pos([self.position[0], self.position[1] - (yDiff * 20)])
+            #     y_edge = True
+            #     background.set_pos([background.get_pos()[0], 0])
+            # # move the background in the opposite direction of the intended movement direction by xDiff and yDiff (multiplied by a factor)
+            # if x_edge is False and y_edge is False:
+            #     self.set_pos([WIDTH//2 - self.sprite.get_width()//2, HEIGHT//2 - self.sprite.get_height()//2])
+            #     background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
+            # if x_edge and y_edge is False:
+            #     self.set_pos([self.position[0] + (xDiff * 20), self.position[1]])
+            #     background.set_pos([0, background.get_pos()[1] - (yDiff * 20)])
+            # if y_edge and x_edge is False:
+            #     self.set_pos([self.position[0], self.position[1] + (yDiff * 20)])
+            #     background.set_pos([background.get_pos()[0] - (xDiff * 20), 0])
+            # if x_edge and y_edge:
+            #     self.set_pos([self.position[0] + (xDiff * 20), self.position[1] + (yDiff * 20)])
+
+            # if the pet is within the bounds, move them
+            if (WIDTH//2 > background.get_pos()[0] > -(background.get_sprite().get_width()-WIDTH//2)) and (HEIGHT//2 > background.get_pos()[1] > -(background.get_sprite().get_height()-HEIGHT//2)):
+                background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
             # redraw all parts of the screen
             self.game_inst.redraw()
             # update the display
@@ -899,12 +933,74 @@ class Pet(Item):
         Decides what emotion the pet should be in based on their statistics
         :return: The new emotion
         """
+        t_emotion = self.emotion
+        if self.stats["thirst"] <= 3:
+            t_emotion = "thirsty"
+        elif self.stats["hunger"] <= 3:
+            t_emotion = "hungry"
+        elif self.stats["thirst"] <= 3 and self.stats["hunger"] <= 3:
+            t_emotion = "malnourished"
+        elif self.stats["energy"] <= 3:
+            t_emotion = "tired"
+        elif self.stats["anger"] <= 3:
+            t_emotion = "angry"
+        elif self.stats["comfort"] <= 3:
+            t_emotion = "uncomfortable"
+        elif self.stats["happiness"] <= 3:
+            t_emotion = "unhappy"
+        elif self.stats["happiness"] >= 6:
+            t_emotion = "happy"
+        else:
+            t_emotion = "neutral"
+        return t_emotion
 
-    def process_emotion(self):
+    def process_emotion(self, emotion):
         """
         Does all of the things that need to be done upon an emotion change
         :return: None
         """
+        if emotion == "thirsty":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playthirst")
+        elif emotion == "hungry":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playhungry")
+        elif emotion == "malnourished":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playmaln")
+        elif emotion == "tired":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "spritetired"))
+        elif emotion == "angry":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "spriteangry"))
+        elif emotion == "uncomfortable":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "spriteuncomfortable"))
+        elif emotion == "unhappy":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "spriteunhappy"))
+        elif emotion == "happy":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "spritehappy"))
+        elif emotion == "neutral":
+            self.emotion = emotion
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playscreen")
+            self.sprite = pygame.image.load(self.format_image(self.animal + "sprite"))
 
     def sleep(self):
         """
