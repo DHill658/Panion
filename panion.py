@@ -121,7 +121,35 @@ class Game:
                 self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
                 self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
                 self.pets[0].set_stat("energy", self.pets[0].get_stat("energy") - 1)
+            if self.secs == 0:
+                mins = self.split(self.mins)
+                for p in range(4):
+                    del self.decorations[len(self.decorations) - 1]
+                [self.add_decoration(i) for i in hours]
+                [self.add_decoration(x) for x in mins]
+                for z in range(2, 6):
+                    deco = self.decorations[z].get_sprite()
+                    self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
+                self.decorations[2].set_pos([20, 715])
+                self.decorations[3].set_pos([70, 715])
+                self.decorations[4].set_pos([160, 715])
+                self.decorations[5].set_pos([210, 715])
+                [self.decorations[y].draw() for y in range(len(self.decorations))]
 
+                if self.mins == 0:
+                    hours = self.split(self.hours)
+                    for p in range(4):
+                        del self.decorations[len(self.decorations) - 1]
+                    [self.add_decoration(i) for i in hours]
+                    [self.add_decoration(x) for x in mins]
+                    for z in range(2, 6):
+                        deco = self.decorations[z].get_sprite()
+                        self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
+                    self.decorations[2].set_pos([20, 715])
+                    self.decorations[3].set_pos([70, 715])
+                    self.decorations[4].set_pos([160, 715])
+                    self.decorations[5].set_pos([210, 715])
+                    [self.decorations[y].draw() for y in range(len(self.decorations))]
             pygame.display.update()
         # once main loop is finished, end the game
         self.end()
