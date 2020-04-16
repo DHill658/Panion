@@ -59,10 +59,10 @@ class Game:
         :return: None
         """
         self.clear_screen()
+        [dm.draw() for dm in self.menus[0].get_decorations()]
+        [b.draw() for b in self.menus[0].get_buttons()]
         [i.draw() for i in self.interactables]
         [d.draw() for d in self.decorations]
-        [b.draw() for b in self.menus[0].get_buttons()]
-        [dm.draw() for dm in self.menus[0].get_decorations()]
         [t.draw() for t in self.menus[0].get_text()]
         [p.draw() for p in self.pets]
 
@@ -82,6 +82,30 @@ class Game:
         self.running = True
         # start the game clock
         self.add_clock()
+        # add the clock
+        self.add_decoration("clock")
+        deco = self.decorations[0].get_sprite()
+        self.decorations[0].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
+        self.decorations[0].set_pos([-40, 700])
+        self.decorations[0].draw()
+        self.add_decoration("colon")
+        deco = self.decorations[1].get_sprite()
+        self.decorations[1].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
+        self.decorations[1].set_pos([100, 695])
+        self.decorations[1].draw()
+        # add the starting numbers on the clock
+        hours = self.split(self.hours)
+        mins = self.split(self.mins)
+        [self.add_decoration(i) for i in hours]
+        [self.add_decoration(x) for x in mins]
+        for z in range(2, 6):
+            deco = self.decorations[z].get_sprite()
+            self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
+        self.decorations[2].set_pos([20, 715])
+        self.decorations[3].set_pos([70, 715])
+        self.decorations[4].set_pos([160, 715])
+        self.decorations[5].set_pos([210, 715])
+        [self.decorations[y].draw() for y in range(2, 6)]
         # main game loop
         while self.running:
             # check for events
@@ -91,6 +115,13 @@ class Game:
             # change real time to 'game time' and check repeated actions
             for i in self.pets:
                 i.check_repeat(self.correct_time(), "eat")
+            if self.mins % 30 == 0:
+                self.pets[0].process_emotion(self.pets[0].change_emotion())
+            if self.mins == 0 and self.secs == 0:
+                self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
+                self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
+                self.pets[0].set_stat("energy", self.pets[0].get_stat("energy") - 1)
+
             pygame.display.update()
         # once main loop is finished, end the game
         self.end()
@@ -192,7 +223,8 @@ class Game:
                         self.redraw()
                         self.menus[0].get_text()[0].text_render()
                 else:
-                    pass
+                    if event.key == K_a:
+                        self.pets[0].sleep()
 
     def end(self):
         """
@@ -224,6 +256,19 @@ class Game:
         :param pos: The position clicked
         :return: None
         """
+
+    @staticmethod
+    def split(number):
+        """
+        Splits a one or two digit number into two separate numbers
+        :param number: the given number
+        :return: [num1, num2]
+        """
+        if number < 10:
+            return [0, number]
+        num1 = str(number)[0]
+        num2 = str(number)[1]
+        return [num1, num2]
 
     def get_interactable(self, index):
         """
@@ -781,16 +826,16 @@ class Item:
         :return: image file path
         """
         # if not a button...
-        if "button" not in image:
+        if "button" not in str(image):
             # return with a normal path
-            return "assets/" + image + ".png"
+            return "assets/" + str(image) + ".png"
         # if there are no current pets
         if not self.game_inst.get_pets():
             # random button
-            ends = ["cat", "dog"]
-            return "assets/" + image + random.choice(ends) + ".png"
+            ends = ["cat", "dog"]   # TODO: draw duck buttons and add duck here
+            return "assets/" + str(image) + random.choice(ends) + ".png"
         # if there is a current pet, use this pet's buttons
-        return "assets/" + image + str(self.game_inst.get_pet(0).get_animal()) + ".png"
+        return "assets/" + str(image) + str(self.game_inst.get_pet(0).get_animal()) + ".png"
 
     def get_sprite(self):
         """
@@ -959,54 +1004,106 @@ class Pet(Item):
         Does all of the things that need to be done upon an emotion change
         :return: None
         """
-        if emotion == "thirsty":
+        if emotion == self.emotion:
+            pass
+        elif emotion == "thirsty":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playthirst")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            self.game_inst.redraw()
         elif emotion == "hungry":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playhungry")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            self.game_inst.redraw()
         elif emotion == "malnourished":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playmaln")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            self.game_inst.redraw()
         elif emotion == "tired":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "spritetired"))
+            self.game_inst.redraw()
         elif emotion == "angry":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteangry"))
+            self.game_inst.redraw()
         elif emotion == "uncomfortable":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteuncomfortable"))
+            self.game_inst.redraw()
         elif emotion == "unhappy":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteunhappy"))
+            self.game_inst.redraw()
         elif emotion == "happy":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "spritehappy"))
+            self.game_inst.redraw()
         elif emotion == "neutral":
             self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
             self.sprite = pygame.image.load(self.format_image(self.animal + "sprite"))
+            self.game_inst.redraw()
 
     def sleep(self):
         """
         Causes the pet to sleep
         :return: None
         """
+        # change the pet to 'sleeping'
+        self.sprite = pygame.image.load(self.format_image(self.animal + "spritesleep"))
+        # change the background to night time
+        self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.image.load(self.format_image("backgroundnight")))
+        deco = self.game_inst.get_menus()[0].get_decorations()[0].get_sprite()
+        self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
+        # create a dark cover to dim the display
+        dark = pygame.Surface((WIDTH, HEIGHT))
+        dark.fill(0)
+        dark.set_alpha(100)
+        self.game_inst.redraw()
+        self.surface.blit(dark, (0, 0))
+        pygame.display.update()
+        # wait 3.5 seconds
+        pygame.time.delay(3500)
+        # change sprite and background back to normal and redraw (also gets rid of tint)
+        self.sprite = pygame.image.load(self.format_image(self.animal + "sprite"))
+        self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.image.load(self.format_image("background")))
+        deco = self.game_inst.get_menus()[0].get_decorations()[0].get_sprite()
+        self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
+        self.game_inst.redraw()
+        # set the time to 7:00 am
+        self.game_inst.set_time([7, 0, 0])
 
     def clicked(self, pos):
         """
@@ -1096,7 +1193,12 @@ class Pet(Item):
         :param value: The value to be set to
         :return: None
         """
-        self.stats[stat] = value
+        if value <= 0:
+            self.stats[stat] = 0
+        elif value >= 10:
+            self.stats[stat] = 10
+        else:
+            self.stats[stat] = value
 
     def get_emotion(self):
         """
