@@ -14,6 +14,11 @@ ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"
 WIDTH = 800
 HEIGHT = 800
 
+BED_START = [-190, -100]
+BALL_START = [0, -70]
+WATER_START = [280, -120]
+FOOD_START = [450, -70]
+
 FPS = 60
 
 
@@ -110,12 +115,10 @@ class Game:
         while self.running:
             # check for events
             self.event_handler()
-            # tick the clock
-            self.clocks[0].tick(FPS)
             # change real time to 'game time' and check repeated actions
             for i in self.pets:
                 i.check_repeat(self.correct_time(), "eat")
-            if self.mins % 30 == 0:
+            if self.mins % 30 == 0 or self.mins == 0:
                 self.pets[0].process_emotion(self.pets[0].change_emotion())
             if self.mins == 0 and self.secs == 0:
                 self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
@@ -150,6 +153,8 @@ class Game:
                     self.decorations[4].set_pos([160, 715])
                     self.decorations[5].set_pos([210, 715])
                     [self.decorations[y].draw() for y in range(len(self.decorations))]
+            # tick the clock
+            self.clocks[0].tick(FPS)
             pygame.display.update()
         # once main loop is finished, end the game
         self.end()
@@ -696,74 +701,156 @@ class Menu:
             # add all parts of menu
             self.add_decoration("background")
             self.add_button("buttonpause")
-            # scale the buttons
+            self.add_button("bed")
+            self.add_button("ball")
+            self.add_button("foodbowl")
+            self.add_button("watertank")
+            # scale everything
             deco = self.decorations[0].get_sprite()
             self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
             button = self.buttons[0].get_sprite()
             self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
+            bed = self.buttons[1].get_sprite()
+            ball = self.buttons[2].get_sprite()
+            food = self.buttons[3].get_sprite()
+            water = self.buttons[4].get_sprite()
+            self.buttons[1].set_sprite(pygame.transform.scale(bed, (int(bed.get_width() * 2), int(bed.get_height() * 2))))
+            self.buttons[2].set_sprite(pygame.transform.scale(ball, (int(ball.get_width() * 2), int(ball.get_height() * 2))))
+            self.buttons[3].set_sprite(pygame.transform.scale(food, (int(food.get_width() * 4), int(food.get_height() * 4))))
+            self.buttons[4].set_sprite(pygame.transform.scale(water, (int(water.get_width() * 4), int(water.get_height() * 4))))
             # set positions of all parts of menu
             self.decorations[0].set_pos([WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, HEIGHT//2 - self.decorations[0].get_sprite().get_height()//2])
             self.buttons[0].set_pos([-25, 3])
+            self.buttons[1].set_pos(BED_START)
+            self.buttons[2].set_pos(BALL_START)
+            self.buttons[3].set_pos(FOOD_START)
+            self.buttons[4].set_pos(WATER_START)
             self.game_inst.get_pets()[0].set_pos([WIDTH//2 - self.game_inst.get_pets()[0].get_sprite().get_width()//2, HEIGHT//2 - self.game_inst.get_pets()[0].get_sprite().get_height()//2])
             # draw all parts of menu
             # print(self.game_inst.get_pets()[0])
             self.decorations[0].draw()
-            self.buttons[0].draw()
+            [i.draw() for i in self.buttons]
             self.game_inst.get_pets()[0].draw()
         elif self.menu == "playthirst":
             # add all parts of menu
+            self.add_decoration("background")
             self.add_button("buttonpause")
             self.add_decoration("thirst")
-            # scale the buttons
+            self.add_button("bed")
+            self.add_button("ball")
+            self.add_button("foodbowl")
+            self.add_button("watertank")
+            # scale everything
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
             button = self.buttons[0].get_sprite()
             self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
-            # scale decorations
-            deco_pic = self.decorations[0].get_sprite()
-            self.decorations[0].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 4, deco_pic.get_height() * 4)))
+            deco_pic = self.decorations[1].get_sprite()
+            self.decorations[1].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 4, deco_pic.get_height() * 4)))
+            bed = self.buttons[1].get_sprite()
+            ball = self.buttons[2].get_sprite()
+            food = self.buttons[3].get_sprite()
+            water = self.buttons[4].get_sprite()
+            self.buttons[1].set_sprite(pygame.transform.scale(bed, (int(bed.get_width() * 2), int(bed.get_height() * 2))))
+            self.buttons[2].set_sprite(pygame.transform.scale(ball, (int(ball.get_width() * 2), int(ball.get_height() * 2))))
+            self.buttons[3].set_sprite(pygame.transform.scale(food, (int(food.get_width() * 4), int(food.get_height() * 4))))
+            self.buttons[4].set_sprite(pygame.transform.scale(water, (int(water.get_width() * 4), int(water.get_height() * 4))))
             # set positions of all parts of menu
+            self.decorations[0].set_pos([WIDTH // 2 - self.decorations[0].get_sprite().get_width() // 2, HEIGHT // 2 - self.decorations[0].get_sprite().get_height() // 2])
+            self.decorations[1].set_pos([740, 5])
             self.buttons[0].set_pos([-25, 3])
-            self.decorations[0].set_pos([740, 5])
+            self.buttons[1].set_pos(BED_START)
+            self.buttons[2].set_pos(BALL_START)
+            self.buttons[3].set_pos(FOOD_START)
+            self.buttons[4].set_pos(WATER_START)
+            self.game_inst.get_pets()[0].set_pos([WIDTH // 2 - self.game_inst.get_pets()[0].get_sprite().get_width() // 2, HEIGHT // 2 - self.game_inst.get_pets()[0].get_sprite().get_height() // 2])
             # draw all parts of menu
-            self.buttons[0].draw()
             self.decorations[0].draw()
+            self.decorations[1].draw()
+            [i.draw() for i in self.buttons]
+            self.game_inst.get_pets()[0].draw()
         elif self.menu == "playhungry":
             # add all parts of the menu
+            self.add_decoration("background")
             self.add_button("buttonpause")
             self.add_decoration("hunger")
-            # scale the buttons
+            self.add_button("bed")
+            self.add_button("ball")
+            self.add_button("foodbowl")
+            self.add_button("watertank")
+            # scale everything
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
             button = self.buttons[0].get_sprite()
             self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
-            # scale the decoration
-            deco_pic = self.decorations[0].get_sprite()
-            self.decorations[0].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 5, deco_pic.get_height() * 5)))
+            deco_pic = self.decorations[1].get_sprite()
+            self.decorations[1].set_sprite(pygame.transform.scale(deco_pic, (deco_pic.get_width() * 5, deco_pic.get_height() * 5)))
+            bed = self.buttons[1].get_sprite()
+            ball = self.buttons[2].get_sprite()
+            food = self.buttons[3].get_sprite()
+            water = self.buttons[4].get_sprite()
+            self.buttons[1].set_sprite(pygame.transform.scale(bed, (int(bed.get_width() * 2), int(bed.get_height() * 2))))
+            self.buttons[2].set_sprite(pygame.transform.scale(ball, (int(ball.get_width() * 2), int(ball.get_height() * 2))))
+            self.buttons[3].set_sprite(pygame.transform.scale(food, (int(food.get_width() * 4), int(food.get_height() * 4))))
+            self.buttons[4].set_sprite(pygame.transform.scale(water, (int(water.get_width() * 4), int(water.get_height() * 4))))
             # set positions for all parts of menu
+            self.decorations[0].set_pos([WIDTH // 2 - self.decorations[0].get_sprite().get_width() // 2, HEIGHT // 2 - self.decorations[0].get_sprite().get_height() // 2])
+            self.decorations[1].set_pos([720, 5])
             self.buttons[0].set_pos([-25, 3])
-            self.decorations[0].set_pos([720, 5])
+            self.buttons[1].set_pos(BED_START)
+            self.buttons[2].set_pos(BALL_START)
+            self.buttons[3].set_pos(FOOD_START)
+            self.buttons[4].set_pos(WATER_START)
+            self.game_inst.get_pets()[0].set_pos([WIDTH // 2 - self.game_inst.get_pets()[0].get_sprite().get_width() // 2, HEIGHT // 2 - self.game_inst.get_pets()[0].get_sprite().get_height() // 2])
             # draw all parts of menu
-            self.buttons[0].draw()
             self.decorations[0].draw()
+            self.decorations[1].draw()
+            [i.draw() for i in self.buttons]
+            self.game_inst.get_pets()[0].draw()
         elif self.menu == "playmaln":
             # add all parts of the menu
+            self.add_decoration("background")
             self.add_button("buttonpause")
             self.add_decoration("thirst")
             self.add_decoration("hunger")
+            self.add_button("bed")
+            self.add_button("ball")
+            self.add_button("foodbowl")
+            self.add_button("watertank")
             # scale the buttons
-            for i in range(len(self.buttons)):
-                button = self.buttons[i].get_sprite()
-                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
+            button = self.buttons[0].get_sprite()
+            self.buttons[0].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.2), int(button.get_height() * 0.2))))
             # scale the decorations
-            deco_pic0 = self.decorations[0].get_sprite()
+            deco = self.decorations[0].get_sprite()
+            self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
             deco_pic1 = self.decorations[1].get_sprite()
-            self.decorations[0].set_sprite(pygame.transform.scale(deco_pic0, (deco_pic0.get_width() * 4, deco_pic0.get_height() * 4)))
-            self.decorations[1].set_sprite(pygame.transform.scale(deco_pic1, (deco_pic1.get_width() * 5, deco_pic1.get_height() * 5)))
+            deco_pic2 = self.decorations[2].get_sprite()
+            self.decorations[1].set_sprite(pygame.transform.scale(deco_pic1, (deco_pic1.get_width() * 4, deco_pic1.get_height() * 4)))
+            self.decorations[2].set_sprite(pygame.transform.scale(deco_pic2, (deco_pic2.get_width() * 5, deco_pic2.get_height() * 5)))
+            bed = self.buttons[1].get_sprite()
+            ball = self.buttons[2].get_sprite()
+            food = self.buttons[3].get_sprite()
+            water = self.buttons[4].get_sprite()
+            self.buttons[1].set_sprite(pygame.transform.scale(bed, (int(bed.get_width() * 2), int(bed.get_height() * 2))))
+            self.buttons[2].set_sprite(pygame.transform.scale(ball, (int(ball.get_width() * 2), int(ball.get_height() * 2))))
+            self.buttons[3].set_sprite(pygame.transform.scale(food, (int(food.get_width() * 4), int(food.get_height() * 4))))
+            self.buttons[4].set_sprite(pygame.transform.scale(water, (int(water.get_width() * 4), int(water.get_height() * 4))))
             # set positions for all parts of menu
+            self.decorations[0].set_pos([WIDTH // 2 - self.decorations[0].get_sprite().get_width() // 2, HEIGHT // 2 - self.decorations[0].get_sprite().get_height() // 2])
             self.buttons[0].set_pos([-25, 3])
-            self.decorations[0].set_pos([740, 5])
-            self.decorations[1].set_pos([670, 1])
+            self.decorations[1].set_pos([740, 5])
+            self.decorations[2].set_pos([670, 1])
+            self.buttons[1].set_pos(BED_START)
+            self.buttons[2].set_pos(BALL_START)
+            self.buttons[3].set_pos(FOOD_START)
+            self.buttons[4].set_pos(WATER_START)
             # draw all parts of menu
             self.buttons[0].draw()
             self.decorations[0].draw()
             self.decorations[1].draw()
+            self.decorations[2].draw()
+            [i.draw() for i in self.buttons]
+            self.game_inst.get_pets()[0].draw()
 
     def get_menu(self):
         """
@@ -790,6 +877,7 @@ class Menu:
     def add_button(self, button):
         """
         Adds a button to self.buttons
+        :param surf: surface
         :param button: Function of the new button
         :return: None
         """
@@ -945,6 +1033,7 @@ class Pet(Item):
         x = pos[0] - WIDTH//2
         y = pos[1] - HEIGHT//2
         background = self.game_inst.get_menus()[0].get_decorations()[0]
+        buttons = self.game_inst.get_menus()[0].get_buttons()
         # gets the angle of travel
         angle = math.atan2(abs(y), abs(x))
         # gets the x value of a triangle of hypotenuse 1 and angle 'angle'
@@ -958,19 +1047,49 @@ class Pet(Item):
             xDiff = -xDiff
         if y < 0:
             yDiff = -yDiff
-        # loops for the distance (divided by a factor)
-        x_edge = False
-        y_edge = False
-        # checks if the pet is at/past the edge and makes sure they are within the bounds
-        if background.get_pos()[0] <= -(background.get_sprite().get_width()-WIDTH//2):
-            background.set_pos([-(background.get_sprite().get_width()-WIDTH//2) + 1, background.get_pos()[1]])
-        if background.get_pos()[1] <= -(background.get_sprite().get_height()-HEIGHT//2):
-            background.set_pos([background.get_pos()[0], -(background.get_sprite().get_height()-HEIGHT//2) + 1])
-        if background.get_pos()[0] >= WIDTH//2:
-            background.set_pos([WIDTH//2 - 1, background.get_pos()[1]])
-        if background.get_pos()[1] >= HEIGHT//2:
-            background.set_pos([background.get_pos()[0], HEIGHT//2 - 1])
 
+        # checks if the pet is at/past the edge and makes sure they are within the bounds
+        if background.get_pos()[0] < -(background.get_sprite().get_width()-WIDTH//2):
+            # right
+
+            difference = -(background.get_sprite().get_width()-WIDTH//2) - background.get_pos()[0]
+            background.set_pos([background.get_pos()[0] + difference, background.get_pos()[1]])
+            for x in range(1, len(buttons)):
+                buttons[x].set_pos([buttons[x].get_pos()[0] + difference, buttons[x].get_pos()[1]])
+
+        if background.get_pos()[1] < -(background.get_sprite().get_height()-HEIGHT//2):
+            # bottom
+
+            difference = -(background.get_sprite().get_height()-HEIGHT//2) - background.get_pos()[1]
+            background.set_pos([background.get_pos()[0], background.get_pos()[1] + difference])
+            for x in range(1, len(buttons)):
+                buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1] + difference])
+
+        if background.get_pos()[0] > WIDTH//2:
+            # left
+            # background.set_pos([background.get_pos()[0] - (xDiff // xDiff), background.get_pos()[1]])
+            # for x in range(1, len(buttons)):
+            #     buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1]])
+            x_edge = True
+
+            difference = background.get_pos()[0] - WIDTH//2
+            background.set_pos([background.get_pos()[0] - difference, background.get_pos()[1]])
+            for x in range(1, len(buttons)):
+                buttons[x].set_pos([buttons[x].get_pos()[0] - difference, buttons[x].get_pos()[1]])
+
+        if background.get_pos()[1] > HEIGHT//2:
+            # top
+            # background.set_pos([background.get_pos()[0], background.get_pos()[1] - (yDiff // yDiff)])
+            # for x in range(1, len(buttons)):
+            #     buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1]])
+            # y_edge = True
+
+            difference = background.get_pos()[1] - HEIGHT // 2
+            background.set_pos([background.get_pos()[0], background.get_pos()[1] - difference])
+            for x in range(1, len(buttons)):
+                buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1] - difference])
+
+        # loops for the distance (divided by a factor)
         for a in range(int(distance)//20):
             # if background.get_pos()[0] > 0 or background.get_pos()[0] < -(background.get_sprite().get_width() - WIDTH):
             #     # self.set_pos([self.position[0] - (xDiff * 20), self.position[1]])
@@ -994,8 +1113,13 @@ class Pet(Item):
             #     self.set_pos([self.position[0] + (xDiff * 20), self.position[1] + (yDiff * 20)])
 
             # if the pet is within the bounds, move them
-            if (WIDTH//2 > background.get_pos()[0] > -(background.get_sprite().get_width()-WIDTH//2)) and (HEIGHT//2 > background.get_pos()[1] > -(background.get_sprite().get_height()-HEIGHT//2)):
+            if (WIDTH//2 >= background.get_pos()[0] >= -(background.get_sprite().get_width()-WIDTH//2)) and (HEIGHT//2 >= background.get_pos()[1] >= -(background.get_sprite().get_height()-HEIGHT//2)):
+                # background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
                 background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
+
+                for x in range(1, len(buttons)):
+                    buttons[x].set_pos([buttons[x].get_pos()[0] - (xDiff * 20), buttons[x].get_pos()[1] - (yDiff * 20)])
+
             # redraw all parts of the screen
             self.game_inst.redraw()
             # update the display
@@ -1007,12 +1131,12 @@ class Pet(Item):
         :return: The new emotion
         """
         t_emotion = self.emotion
-        if self.stats["thirst"] <= 3:
+        if self.stats["thirst"] <= 3 and self.stats["hunger"] <= 3:
+            t_emotion = "malnourished"
+        elif self.stats["thirst"] <= 3:
             t_emotion = "thirsty"
         elif self.stats["hunger"] <= 3:
             t_emotion = "hungry"
-        elif self.stats["thirst"] <= 3 and self.stats["hunger"] <= 3:
-            t_emotion = "malnourished"
         elif self.stats["energy"] <= 3:
             t_emotion = "tired"
         elif self.stats["anger"] <= 3:
@@ -1034,73 +1158,100 @@ class Pet(Item):
         """
         if emotion == self.emotion:
             pass
+        elif emotion == "malnourished":
+            self.emotion = emotion
+            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
+            self.game_inst.remove_menus()
+            self.game_inst.menu("playmaln")
+            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
+            self.game_inst.redraw()
         elif emotion == "thirsty":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playthirst")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.game_inst.redraw()
         elif emotion == "hungry":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playhungry")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
-            self.game_inst.redraw()
-        elif emotion == "malnourished":
-            self.emotion = emotion
-            back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
-            self.game_inst.remove_menus()
-            self.game_inst.menu("playmaln")
-            self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.game_inst.redraw()
         elif emotion == "tired":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "spritetired"))
             self.game_inst.redraw()
         elif emotion == "angry":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteangry"))
             self.game_inst.redraw()
         elif emotion == "uncomfortable":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteuncomfortable"))
             self.game_inst.redraw()
         elif emotion == "unhappy":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "spriteunhappy"))
             self.game_inst.redraw()
         elif emotion == "happy":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "spritehappy"))
             self.game_inst.redraw()
         elif emotion == "neutral":
             self.emotion = emotion
             back_pos = self.game_inst.get_menus()[0].get_decorations()[0].get_pos()
+            inter_pos = []
+            [inter_pos.append(x.get_pos()) for x in self.game_inst.get_menus()[0].get_buttons()]
             self.game_inst.remove_menus()
             self.game_inst.menu("playscreen")
             self.game_inst.get_menus()[0].get_decorations()[0].set_pos(back_pos)
+            [self.game_inst.get_menus()[0].get_buttons()[y].set_pos(inter_pos[y]) for y in range(len(self.game_inst.get_menus()[0].get_buttons()))]
             self.sprite = pygame.image.load(self.format_image(self.animal + "sprite"))
             self.game_inst.redraw()
 
@@ -1129,9 +1280,10 @@ class Pet(Item):
         self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.image.load(self.format_image("background")))
         deco = self.game_inst.get_menus()[0].get_decorations()[0].get_sprite()
         self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.75), int(deco.get_height() * 0.75))))
-        self.game_inst.redraw()
         # set the time to 7:00 am
-        self.game_inst.set_time([7, 0, 0])
+        self.game_inst.set_time([6, 59, 980])
+        self.game_inst.redraw()
+        pygame.display.update()
 
     def clicked(self, pos):
         """
@@ -1263,16 +1415,17 @@ class Interactable(Item):
         Runs whenever an Interactable is clicked. Runs the desired function(s)
         :return: None
         """
-        if self.action == "drink":
+        if self.action == "watertank":
             self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).set_stat("thirst", 10)
-            self.game_inst.remove_menus()
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
-        if self.action == "eat":
+        if self.action == "foodbowl":
             self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).set_stat("hunger", 10)
-            self.game_inst.remove_menus()
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
+        if self.action == "bed":
+            self.game_inst.get_pet(0).travel(pos)
+            self.game_inst.get_pet(0).sleep()
         if "play" in self.action:
             if self.action == "playball":
                 ball = True
