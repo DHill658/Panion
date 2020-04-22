@@ -119,40 +119,48 @@ class Game:
             for i in self.pets:
                 i.check_repeat(self.correct_time(), "eat")
             if self.mins % 30 == 0 or self.mins == 0:
+                # check for emotion changes every thirty seconds
                 self.pets[0].process_emotion(self.pets[0].change_emotion())
             if self.mins == 0 and self.secs == 0:
+                # change all of these statistics every minute
                 self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
                 self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
-                self.pets[0].set_stat("energy", self.pets[0].get_stat("energy") - 1)
+            # if the minutes have changed
             if self.secs == 0:
+                # change the minutes to display the new minutes
                 mins = self.split(self.mins)
-                for p in range(4):
-                    del self.decorations[len(self.decorations) - 1]
-                [self.add_decoration(i) for i in hours]
-                [self.add_decoration(x) for x in mins]
-                for z in range(2, 6):
+                min1 = self.decorations[4]
+                min2 = self.decorations[5]
+                min1.set_display(mins[0])
+                min2.set_display(mins[1])
+                min1.set_sprite(pygame.image.load(min1.format_image(min1.get_display())))
+                min2.set_sprite(pygame.image.load(min2.format_image(min2.get_display())))
+                for z in range(4, 6):
                     deco = self.decorations[z].get_sprite()
                     self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
-                self.decorations[2].set_pos([20, 715])
-                self.decorations[3].set_pos([70, 715])
-                self.decorations[4].set_pos([160, 715])
-                self.decorations[5].set_pos([210, 715])
-                [self.decorations[y].draw() for y in range(len(self.decorations))]
+                [self.decorations[y].draw() for y in range(0, 6)]
 
+                # if the hours have changed
                 if self.mins == 0:
+                    # change everything to display correctly
                     hours = self.split(self.hours)
-                    for p in range(4):
-                        del self.decorations[len(self.decorations) - 1]
-                    [self.add_decoration(i) for i in hours]
-                    [self.add_decoration(x) for x in mins]
+                    hour1 = self.decorations[2]
+                    hour2 = self.decorations[3]
+                    min1 = self.decorations[4]
+                    min2 = self.decorations[5]
+                    hour1.set_display(hours[0])
+                    hour2.set_display(hours[1])
+                    min1.set_display(mins[0])
+                    min2.set_display(mins[1])
+                    hour1.set_sprite(pygame.image.load(hour1.format_image(hour1.get_display())))
+                    hour2.set_sprite(pygame.image.load(hour2.format_image(hour2.get_display())))
+                    min1.set_sprite(pygame.image.load(min1.format_image(min1.get_display())))
+                    min2.set_sprite(pygame.image.load(min2.format_image(min2.get_display())))
                     for z in range(2, 6):
                         deco = self.decorations[z].get_sprite()
                         self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
-                    self.decorations[2].set_pos([20, 715])
-                    self.decorations[3].set_pos([70, 715])
-                    self.decorations[4].set_pos([160, 715])
-                    self.decorations[5].set_pos([210, 715])
-                    [self.decorations[y].draw() for y in range(len(self.decorations))]
+                    [self.decorations[y].draw() for y in range(0, 6)]
+
             # tick the clock
             self.clocks[0].tick(FPS)
             pygame.display.update()
@@ -229,8 +237,37 @@ class Game:
                         none_clicked = False
                         # if it is, run clicked() for that pet
                         pet.clicked(pygame.mouse.get_pos())
-                if none_clicked:
-                    self.pets[0].travel(pygame.mouse.get_pos())
+                if none_clicked and self.running:
+                    if not self.pets[0].get_ball_active():
+                        self.pets[0].travel(pygame.mouse.get_pos())
+                    else:
+                        # get original position of pet and mouse pointer
+                        back = self.menus[0].get_decorations()[0].get_pos()
+                        print(back)
+                        point = pygame.mouse.get_pos()
+                        # drop the ball
+                        self.add_decoration("ball")
+                        ball = self.decorations[len(self.decorations) - 1]
+                        ball.set_sprite(pygame.transform.scale(ball.get_sprite(), (int(ball.get_sprite().get_width() * 2), int(ball.get_sprite().get_height() * 2))))
+                        point_ball_c = [point[0] - ball.get_sprite().get_width()//2, point[1] - ball.get_sprite().get_height()//2]
+                        ball.set_pos(point_ball_c)
+                        ball.set_pos([ball.get_pos()[0], ball.get_pos()[1] - 70])
+                        ball.draw()
+                        pygame.display.update()
+                        while ball.get_pos() != list(point_ball_c):
+                            ball.set_pos([ball.get_pos()[0], ball.get_pos()[1] + 7])
+                            self.redraw()
+                            pygame.display.update()
+                        print(point)
+                        reverse = self.pets[0].travel(point)
+                        print(reverse)
+                        reverse = [-(reverse[0]) + WIDTH//2, -(reverse[1]) + HEIGHT//2]
+                        # reverse = [reverse[0] + WIDTH//2, reverse[1] + HEIGHT//2]
+                        print(reverse)
+                        del self.decorations[len(self.decorations) - 1]
+                        self.pets[0].travel(reverse)
+                        print(self.menus[0].get_decorations()[0].get_pos())
+
             # if a key is pressed
             elif event.type == KEYDOWN:
                 # if a text box is active
@@ -1015,6 +1052,7 @@ class Pet(Item):
         self.stats = {"happiness": 5, "hunger": 5, "comfort": 5, "anger": 5, "thirst": 5, "energy": 5}
         self.emotion = "happy"
         self.times = []
+        self.ball_active = False
 
     def __str__(self):
         """
@@ -1027,11 +1065,13 @@ class Pet(Item):
         """
         Moves the Pet to a specified position
         :param pos: Specified position
-        :return: None
+        :return: [x, y]
         """
+        print("POs: " + str(pos))
         # gets the difference between the coords of the pet and the mouse
         x = pos[0] - WIDTH//2
         y = pos[1] - HEIGHT//2
+        print("travel: " + str([x, y]))
         background = self.game_inst.get_menus()[0].get_decorations()[0]
         buttons = self.game_inst.get_menus()[0].get_buttons()
         # gets the angle of travel
@@ -1054,16 +1094,16 @@ class Pet(Item):
 
             difference = -(background.get_sprite().get_width()-WIDTH//2) - background.get_pos()[0]
             background.set_pos([background.get_pos()[0] + difference, background.get_pos()[1]])
-            for x in range(1, len(buttons)):
-                buttons[x].set_pos([buttons[x].get_pos()[0] + difference, buttons[x].get_pos()[1]])
+            for c in range(1, len(buttons)):
+                buttons[c].set_pos([buttons[c].get_pos()[0] + difference, buttons[c].get_pos()[1]])
 
         if background.get_pos()[1] < -(background.get_sprite().get_height()-HEIGHT//2):
             # bottom
 
             difference = -(background.get_sprite().get_height()-HEIGHT//2) - background.get_pos()[1]
             background.set_pos([background.get_pos()[0], background.get_pos()[1] + difference])
-            for x in range(1, len(buttons)):
-                buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1] + difference])
+            for c in range(1, len(buttons)):
+                buttons[c].set_pos([buttons[c].get_pos()[0], buttons[c].get_pos()[1] + difference])
 
         if background.get_pos()[0] > WIDTH//2:
             # left
@@ -1074,8 +1114,8 @@ class Pet(Item):
 
             difference = background.get_pos()[0] - WIDTH//2
             background.set_pos([background.get_pos()[0] - difference, background.get_pos()[1]])
-            for x in range(1, len(buttons)):
-                buttons[x].set_pos([buttons[x].get_pos()[0] - difference, buttons[x].get_pos()[1]])
+            for c in range(1, len(buttons)):
+                buttons[c].set_pos([buttons[c].get_pos()[0] - difference, buttons[c].get_pos()[1]])
 
         if background.get_pos()[1] > HEIGHT//2:
             # top
@@ -1086,8 +1126,8 @@ class Pet(Item):
 
             difference = background.get_pos()[1] - HEIGHT // 2
             background.set_pos([background.get_pos()[0], background.get_pos()[1] - difference])
-            for x in range(1, len(buttons)):
-                buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1] - difference])
+            for c in range(1, len(buttons)):
+                buttons[c].set_pos([buttons[c].get_pos()[0], buttons[c].get_pos()[1] - difference])
 
         # loops for the distance (divided by a factor)
         for a in range(int(distance)//20):
@@ -1117,13 +1157,14 @@ class Pet(Item):
                 # background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
                 background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
 
-                for x in range(1, len(buttons)):
-                    buttons[x].set_pos([buttons[x].get_pos()[0] - (xDiff * 20), buttons[x].get_pos()[1] - (yDiff * 20)])
+                for d in range(1, len(buttons)):
+                    buttons[d].set_pos([buttons[d].get_pos()[0] - (xDiff * 20), buttons[d].get_pos()[1] - (yDiff * 20)])
 
             # redraw all parts of the screen
             self.game_inst.redraw()
             # update the display
             pygame.display.update()
+        return [x, y]
 
     def change_emotion(self):
         """
@@ -1395,6 +1436,21 @@ class Pet(Item):
         """
         self.emotion = emotion
 
+    def set_ball_active(self, boolean):
+        """
+        Sets the value of self.ball_active
+        :param boolean: boolean value to be set
+        :return: None
+        """
+        self.ball_active = boolean
+
+    def get_ball_active(self):
+        """
+        Returns the value of self.ball_active
+        :return: self.ball_active
+        """
+        return self.ball_active
+
 
 class Interactable(Item):
     def __init__(self, display, action, surface, game_inst):
@@ -1426,9 +1482,8 @@ class Interactable(Item):
         if self.action == "bed":
             self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).sleep()
-        if "play" in self.action:
-            if self.action == "playball":
-                ball = True
+        if self.action == "ball":
+            self.game_inst.get_pet(0).set_ball_active(True)
         # if a sprite is clicked
         if "sprite" in self.action:
             # if the main game is not running (i.e. if the pet is being selected)
@@ -1519,6 +1574,8 @@ class Interactable(Item):
                     self.game_inst.get_menus()[0].get_text()[0].text_render()
                     invalid = True
             if not invalid:
+                if self.game_inst.get_decorations():
+                    self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
                 self.game_inst.set_startrun(False)
                 self.game_inst.set_running(True)
                 self.game_inst.remove_menus()
@@ -1589,6 +1646,8 @@ class Interactable(Item):
                         conn.commit()
                         conn.close()
                         # start playing game
+                        if self.game_inst.get_decorations():
+                            self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
                         self.game_inst.add_pet(self.game_inst.get_pet_data()[0], self.game_inst.get_pet_data()[1])
                         # TODO: set all stats to the values from the database
                         conn.close()
@@ -1661,12 +1720,6 @@ class Decorative(Item):
     def clicked(self, pos):
         """
         Runs whenever a Decorative is clicked. Runs the desired function(s)
-        :return: None
-        """
-
-    def place_clock(self):
-        """
-        Draws the clock onto the screen for the player
         :return: None
         """
 
