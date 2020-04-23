@@ -1160,6 +1160,9 @@ class Pet(Item):
                 for d in range(1, len(buttons)):
                     buttons[d].set_pos([buttons[d].get_pos()[0] - (xDiff * 20), buttons[d].get_pos()[1] - (yDiff * 20)])
 
+                if self.ball_active and len(self.game_inst.get_decorations()) >= 7:
+                    ball = self.game_inst.get_decorations()[len(self.game_inst.get_decorations()) - 1]
+                    ball.set_pos([ball.get_pos()[0] - (xDiff * 20), ball.get_pos()[1] - (yDiff * 20)])
             # redraw all parts of the screen
             self.game_inst.redraw()
             # update the display
@@ -1303,6 +1306,8 @@ class Pet(Item):
         """
         # change the pet to 'sleeping'
         self.sprite = pygame.image.load(self.format_image(self.animal + "spritesleep"))
+        # set the pet's energy to 10
+        self.set_stat("energy", 10)
         # change the background to night time
         self.game_inst.get_menus()[0].get_decorations()[0].set_sprite(pygame.image.load(self.format_image("backgroundnight")))
         deco = self.game_inst.get_menus()[0].get_decorations()[0].get_sprite()
@@ -1483,7 +1488,7 @@ class Interactable(Item):
             self.game_inst.get_pet(0).travel(pos)
             self.game_inst.get_pet(0).sleep()
         if self.action == "ball":
-            self.game_inst.get_pet(0).set_ball_active(True)
+            self.game_inst.get_pet(0).set_ball_active(not self.game_inst.get_pet(0).get_ball_active())
         # if a sprite is clicked
         if "sprite" in self.action:
             # if the main game is not running (i.e. if the pet is being selected)
