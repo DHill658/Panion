@@ -115,9 +115,8 @@ class Game:
         while self.running:
             # check for events
             self.event_handler()
-            # change real time to 'game time' and check repeated actions
-            for i in self.pets:
-                i.check_repeat(self.correct_time(), "eat")
+            # change real time to 'game time'
+            self.correct_time()
             if self.mins % 30 == 0 or self.mins == 0:
                 # check for emotion changes every thirty seconds
                 self.pets[0].process_emotion(self.pets[0].change_emotion())
@@ -243,7 +242,6 @@ class Game:
                     else:
                         # get original position of pet and mouse pointer
                         back = self.menus[0].get_decorations()[0].get_pos()
-                        print(back)
                         point = pygame.mouse.get_pos()
                         # drop the ball
                         self.add_decoration("ball")
@@ -258,15 +256,11 @@ class Game:
                             ball.set_pos([ball.get_pos()[0], ball.get_pos()[1] + 7])
                             self.redraw()
                             pygame.display.update()
-                        print(point)
                         reverse = self.pets[0].travel(point)
-                        print(reverse)
                         reverse = [-(reverse[0]) + WIDTH//2, -(reverse[1]) + HEIGHT//2]
                         # reverse = [reverse[0] + WIDTH//2, reverse[1] + HEIGHT//2]
-                        print(reverse)
                         del self.decorations[len(self.decorations) - 1]
                         self.pets[0].travel(reverse)
-                        print(self.menus[0].get_decorations()[0].get_pos())
 
             # if a key is pressed
             elif event.type == KEYDOWN:
@@ -1067,11 +1061,9 @@ class Pet(Item):
         :param pos: Specified position
         :return: [x, y]
         """
-        print("POs: " + str(pos))
         # gets the difference between the coords of the pet and the mouse
         x = pos[0] - WIDTH//2
         y = pos[1] - HEIGHT//2
-        print("travel: " + str([x, y]))
         background = self.game_inst.get_menus()[0].get_decorations()[0]
         buttons = self.game_inst.get_menus()[0].get_buttons()
         # gets the angle of travel
@@ -1366,6 +1358,26 @@ class Pet(Item):
         Checks to see if actions are repeated every game tick
         :return: None
         """
+        done = False
+        # checking all of the previous actions
+        for event in self.times:
+            # if the action is the same, the counter has 2 or less events, and at least one time
+            if event[0] == action and event[1] == 1:
+                # if the given time is within 15 mins either side of the previous action(s)
+                if time[0] == event[2][0] and (event[2][1] - 5) <= time[1] <= (event[2][1] + 5):
+                    # add the time
+                    event.append(time)
+                    # add to the counter
+                    event[1] += 1
+                    done = True
+                # if the event is old and has not repeated
+                else:
+                    # remove it
+                    self.times.remove(event)
+        # if there are no matching events
+        if not done:
+            # add it to the list
+            self.times.append([action, 1, time])
 
     def set_time(self, time):
         """
@@ -1477,17 +1489,33 @@ class Interactable(Item):
         :return: None
         """
         if self.action == "watertank":
+            # go to the water
             self.game_inst.get_pet(0).travel(pos)
+            # set thirst stat to full
             self.game_inst.get_pet(0).set_stat("thirst", 10)
+            # check for repeat actions
+            self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "drink")
+            print(self.game_inst.get_pet(0).get_times())
+            # change emotions
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "foodbowl":
+            # go to the food
             self.game_inst.get_pet(0).travel(pos)
+            # set hunger stat to full
             self.game_inst.get_pet(0).set_stat("hunger", 10)
+            # check for repeat actions
+            self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "eat")
+            # change emotions
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "bed":
+            # go to bed
             self.game_inst.get_pet(0).travel(pos)
+            # check for repeat actions
+            self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "sleep")
+            # sleep
             self.game_inst.get_pet(0).sleep()
         if self.action == "ball":
+            # swap 'ball_active'
             self.game_inst.get_pet(0).set_ball_active(not self.game_inst.get_pet(0).get_ball_active())
         # if a sprite is clicked
         if "sprite" in self.action:
