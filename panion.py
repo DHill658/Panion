@@ -160,6 +160,25 @@ class Game:
                         self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
                     [self.decorations[y].draw() for y in range(0, 6)]
 
+            # checking for repeated actions
+            for event in self.pets[0].get_times():
+                # if the current time is the same and the event is locked in
+                if (event[1] >= 2) and (self.hours == event[2][0]) and (self.mins == event[2][1]) and (self.secs - 17 <= event[2][2] <= self.secs + 17):
+                    if event[0] == "eat":
+                        food = self.menus[0].get_buttons()[3]
+                        position = food.get_pos()
+                        position = [position[0] + food.get_sprite().get_width(), position[1] + food.get_sprite().get_height()]
+                        food.clicked(position)
+                    elif event[0] == "drink":
+                        drink = self.menus[0].get_buttons()[4]
+                        position = drink.get_pos()
+                        position = [position[0] + drink.get_sprite().get_width(), position[1] + drink.get_sprite().get_height()]
+                        drink.clicked(position)
+                    elif event[0] == "sleep":
+                        bed = self.menus[0].get_buttons()[1]
+                        position = bed.get_pos()
+                        position = [position[0] + bed.get_sprite().get_width(), position[1] + bed.get_sprite().get_height()]
+                        bed.clicked(position)
             # tick the clock
             self.clocks[0].tick(FPS)
             pygame.display.update()
@@ -240,10 +259,7 @@ class Game:
                     if not self.pets[0].get_ball_active():
                         self.pets[0].travel(pygame.mouse.get_pos())
                     else:
-                        # get original position of pet and mouse pointer
-                        back = self.menus[0].get_decorations()[0].get_pos()
                         point = pygame.mouse.get_pos()
-                        # drop the ball
                         self.add_decoration("ball")
                         ball = self.decorations[len(self.decorations) - 1]
                         ball.set_sprite(pygame.transform.scale(ball.get_sprite(), (int(ball.get_sprite().get_width() * 2), int(ball.get_sprite().get_height() * 2))))
@@ -252,14 +268,18 @@ class Game:
                         ball.set_pos([ball.get_pos()[0], ball.get_pos()[1] - 70])
                         ball.draw()
                         pygame.display.update()
+                        # drop the ball
                         while ball.get_pos() != list(point_ball_c):
                             ball.set_pos([ball.get_pos()[0], ball.get_pos()[1] + 7])
                             self.redraw()
                             pygame.display.update()
+                        # move the pet to the ball and get the parameters used for that motion
                         reverse = self.pets[0].travel(point)
+                        # flip the parameters
                         reverse = [-(reverse[0]) + WIDTH//2, -(reverse[1]) + HEIGHT//2]
-                        # reverse = [reverse[0] + WIDTH//2, reverse[1] + HEIGHT//2]
+                        # remove the ball
                         del self.decorations[len(self.decorations) - 1]
+                        # return the pet to its original position
                         self.pets[0].travel(reverse)
 
             # if a key is pressed
@@ -307,6 +327,7 @@ class Game:
                       str(i.get_stat("hunger")) + ', Thirst = ' + str(i.get_stat("thirst")) + ', Energy = ' + str(i.get_stat("energy")) +
                       ', Hours = ' + str(self.correct_time()[0]) + ', Mins = ' + str(self.correct_time()[1]) + ', Secs = ' +
                       str(self.correct_time()[2]) + ' WHERE Name = "' + i.get_name() + '";')
+            # TODO: add self.times to this list
         conn.commit()
         conn.close()
         # quit pygame
@@ -908,7 +929,6 @@ class Menu:
     def add_button(self, button):
         """
         Adds a button to self.buttons
-        :param surf: surface
         :param button: Function of the new button
         :return: None
         """
@@ -1099,10 +1119,6 @@ class Pet(Item):
 
         if background.get_pos()[0] > WIDTH//2:
             # left
-            # background.set_pos([background.get_pos()[0] - (xDiff // xDiff), background.get_pos()[1]])
-            # for x in range(1, len(buttons)):
-            #     buttons[x].set_pos([buttons[x].get_pos()[0], buttons[x].get_pos()[1]])
-            x_edge = True
 
             difference = background.get_pos()[0] - WIDTH//2
             background.set_pos([background.get_pos()[0] - difference, background.get_pos()[1]])
@@ -1192,6 +1208,7 @@ class Pet(Item):
         Does all of the things that need to be done upon an emotion change
         :return: None
         """
+        # check which emotion is given, and perform the desired actions based on that
         if emotion == self.emotion:
             pass
         elif emotion == "malnourished":
@@ -1495,7 +1512,6 @@ class Interactable(Item):
             self.game_inst.get_pet(0).set_stat("thirst", 10)
             # check for repeat actions
             self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "drink")
-            print(self.game_inst.get_pet(0).get_times())
             # change emotions
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "foodbowl":
@@ -1552,7 +1568,6 @@ class Interactable(Item):
                 pass
         if "button" in self.action:
             self.button(self.action)
-        # TODO: add variables that hold information on what has been chosen in the starting menus
 
     def button(self, action):
         """
@@ -1621,7 +1636,6 @@ class Interactable(Item):
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
             self.game_inst.menu("petchoice")
-            # TODO: create temp array of pet_info, but might have to create in add_menu()
         elif action == "buttonold":
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
@@ -1669,6 +1683,7 @@ class Interactable(Item):
                         # redraws the screen, including the text in the text box
                         self.game_inst.redraw()
                         self.game_inst.get_menus()[0].get_text()[0].text_render()
+                    # if the chosen name has not already been used
                     else:
                         # connect to the database
                         conn = sqlite3.connect('pets.db')
@@ -1684,7 +1699,7 @@ class Interactable(Item):
                         self.game_inst.add_pet(self.game_inst.get_pet_data()[0], self.game_inst.get_pet_data()[1])
                         # TODO: set all stats to the values from the database
                         conn.close()
-                        # TODO: position and draw the petS
+                        # TODO: position and draw the pets
                         self.game_inst.get_pets()[0].draw()
                         self.button("buttonplay")
                 # else on settings menu in beginning
