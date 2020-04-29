@@ -6,6 +6,7 @@ import sys
 import sqlite3
 import random
 import math
+import ast
 
 
 ALPHABET = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
@@ -26,6 +27,7 @@ class Game:
     def __init__(self):
         self.running = False
         self.startrun = True
+        self.paused = False
         self.interactables = []
         self.decorations = []
         self.pets = []
@@ -87,78 +89,64 @@ class Game:
         self.running = True
         # start the game clock
         self.add_clock()
-        # add the clock
-        self.add_decoration("clock")
-        deco = self.decorations[0].get_sprite()
-        self.decorations[0].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
-        self.decorations[0].set_pos([-40, 700])
-        self.decorations[0].draw()
-        self.add_decoration("colon")
-        deco = self.decorations[1].get_sprite()
-        self.decorations[1].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
-        self.decorations[1].set_pos([100, 695])
-        self.decorations[1].draw()
-        # add the starting numbers on the clock
-        hours = self.split(self.hours)
-        mins = self.split(self.mins)
-        [self.add_decoration(i) for i in hours]
-        [self.add_decoration(x) for x in mins]
-        for z in range(2, 6):
-            deco = self.decorations[z].get_sprite()
-            self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
-        self.decorations[2].set_pos([20, 715])
-        self.decorations[3].set_pos([70, 715])
-        self.decorations[4].set_pos([160, 715])
-        self.decorations[5].set_pos([210, 715])
-        [self.decorations[y].draw() for y in range(2, 6)]
+        self.create_visual_clock()
         # main game loop
         while self.running:
+            paused = False
             # check for events
             self.event_handler()
             # change real time to 'game time'
             self.correct_time()
-            if self.mins % 30 == 0 or self.mins == 0:
-                # check for emotion changes every thirty seconds
-                self.pets[0].process_emotion(self.pets[0].change_emotion())
-            if self.mins == 0 and self.secs == 0:
-                # change all of these statistics every minute
-                self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
-                self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
-            # if the minutes have changed
-            if self.secs == 0:
-                # change the minutes to display the new minutes
-                mins = self.split(self.mins)
-                min1 = self.decorations[4]
-                min2 = self.decorations[5]
-                min1.set_display(mins[0])
-                min2.set_display(mins[1])
-                min1.set_sprite(pygame.image.load(min1.format_image(min1.get_display())))
-                min2.set_sprite(pygame.image.load(min2.format_image(min2.get_display())))
-                for z in range(4, 6):
-                    deco = self.decorations[z].get_sprite()
-                    self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
-                [self.decorations[y].draw() for y in range(0, 6)]
-
-                # if the hours have changed
-                if self.mins == 0:
-                    # change everything to display correctly
-                    hours = self.split(self.hours)
-                    hour1 = self.decorations[2]
-                    hour2 = self.decorations[3]
+            # try to change the time, won't change if game is paused
+            try:
+                exception = self.decorations[5]
+                # if the minutes have changed
+                if self.secs == 0:
+                    # change the minutes to display the new minutes
+                    mins = self.split(self.mins)
                     min1 = self.decorations[4]
                     min2 = self.decorations[5]
-                    hour1.set_display(hours[0])
-                    hour2.set_display(hours[1])
                     min1.set_display(mins[0])
                     min2.set_display(mins[1])
-                    hour1.set_sprite(pygame.image.load(hour1.format_image(hour1.get_display())))
-                    hour2.set_sprite(pygame.image.load(hour2.format_image(hour2.get_display())))
                     min1.set_sprite(pygame.image.load(min1.format_image(min1.get_display())))
                     min2.set_sprite(pygame.image.load(min2.format_image(min2.get_display())))
-                    for z in range(2, 6):
+                    for z in range(4, 6):
                         deco = self.decorations[z].get_sprite()
                         self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
                     [self.decorations[y].draw() for y in range(0, 6)]
+
+                    # if the hours have changed
+                    if self.mins == 0:
+                        # change everything to display correctly
+                        hours = self.split(self.hours)
+                        hour1 = self.decorations[2]
+                        hour2 = self.decorations[3]
+                        min1 = self.decorations[4]
+                        min2 = self.decorations[5]
+                        hour1.set_display(hours[0])
+                        hour2.set_display(hours[1])
+                        min1.set_display(mins[0])
+                        min2.set_display(mins[1])
+                        hour1.set_sprite(pygame.image.load(hour1.format_image(hour1.get_display())))
+                        hour2.set_sprite(pygame.image.load(hour2.format_image(hour2.get_display())))
+                        min1.set_sprite(pygame.image.load(min1.format_image(min1.get_display())))
+                        min2.set_sprite(pygame.image.load(min2.format_image(min2.get_display())))
+                        for z in range(2, 6):
+                            deco = self.decorations[z].get_sprite()
+                            self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
+                        [self.decorations[y].draw() for y in range(0, 6)]
+
+                if self.mins % 30 == 0 or self.mins == 0:
+                    # check for emotion changes every thirty seconds
+                    self.pets[0].process_emotion(self.pets[0].change_emotion())
+                if self.mins == 0 and self.secs == 0:
+                    # change all of these statistics every minute
+                    self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
+                    self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
+
+            # if paused, do nothing
+            except IndexError:
+                paused = True
 
             # checking for repeated actions
             for event in self.pets[0].get_times():
@@ -179,8 +167,9 @@ class Game:
                         position = bed.get_pos()
                         position = [position[0] + bed.get_sprite().get_width(), position[1] + bed.get_sprite().get_height()]
                         bed.clicked(position)
-            # tick the clock
+
             self.clocks[0].tick(FPS)
+
             pygame.display.update()
         # once main loop is finished, end the game
         self.end()
@@ -326,21 +315,13 @@ class Game:
                       ', Hunger = ' + str(i.get_stat("hunger")) + ', Comfort = ' + str(i.get_stat("comfort")) + ', Anger = ' +
                       str(i.get_stat("hunger")) + ', Thirst = ' + str(i.get_stat("thirst")) + ', Energy = ' + str(i.get_stat("energy")) +
                       ', Hours = ' + str(self.correct_time()[0]) + ', Mins = ' + str(self.correct_time()[1]) + ', Secs = ' +
-                      str(self.correct_time()[2]) + ' WHERE Name = "' + i.get_name() + '";')
-            # TODO: add self.times to this list
+                      str(self.correct_time()[2]) + ', Times = "' + str(i.get_times()) + '" WHERE Name = "' + i.get_name() + '";')
         conn.commit()
         conn.close()
         # quit pygame
         pygame.quit()
         # quit the window
         sys.exit()
-
-    def process_click(self, pos):
-        """
-        Processes what clicked() method to call when a point is clicked on the screen
-        :param pos: The position clicked
-        :return: None
-        """
 
     @staticmethod
     def split(number):
@@ -354,6 +335,36 @@ class Game:
         num1 = str(number)[0]
         num2 = str(number)[1]
         return [num1, num2]
+
+    def create_visual_clock(self):
+        """
+        Creates the visual clock
+        :return: None
+        """
+        # add the clock
+        self.add_decoration("clock")
+        deco = self.decorations[0].get_sprite()
+        self.decorations[0].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
+        self.decorations[0].set_pos([-40, 700])
+        self.decorations[0].draw()
+        self.add_decoration("colon")
+        deco = self.decorations[1].get_sprite()
+        self.decorations[1].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 2, deco.get_height() // 2)))
+        self.decorations[1].set_pos([100, 695])
+        self.decorations[1].draw()
+        # add the starting numbers on the clock
+        hours = self.split(self.hours)
+        mins = self.split(self.mins)
+        [self.add_decoration(i) for i in hours]
+        [self.add_decoration(x) for x in mins]
+        for z in range(2, 6):
+            deco = self.decorations[z].get_sprite()
+            self.decorations[z].set_sprite(pygame.transform.scale(deco, (deco.get_width() // 3, deco.get_height() // 3)))
+        self.decorations[2].set_pos([20, 715])
+        self.decorations[3].set_pos([70, 715])
+        self.decorations[4].set_pos([160, 715])
+        self.decorations[5].set_pos([210, 715])
+        [self.decorations[y].draw() for y in range(2, 6)]
 
     def get_interactable(self, index):
         """
@@ -405,11 +416,18 @@ class Game:
 
     def remove_decoration(self, index):
         """
-        Removes a specific instance of Decorative
-        :param index: The index of the desired instance
+        Removes a specific instance of Decorative class
+        :param index: The desired instance
         :return: None
         """
         self.decorations.remove(index)
+
+    def remove_decorations(self):
+        """
+        Clears self.decorations
+        :return: None
+        """
+        self.decorations.clear()
 
     def get_pet(self, index):
         """
@@ -460,7 +478,7 @@ class Game:
 
     def remove_menus(self):
         """
-        Removes a specific instance of the Menu class
+        Remove all instances of the Menu class
         :return: None
         """
         self.menus.clear()
@@ -509,6 +527,13 @@ class Game:
             # reset clock to loop back after 24 'hours'
             self.hours = 0
         # return hours mins and secs
+        return [self.hours, self.mins, self.secs]
+
+    def get_time(self):
+        """
+        Returns [self.hours, self.mins, self.secs]
+        :return: [self.hours, self.mins, self.secs]
+        """
         return [self.hours, self.mins, self.secs]
 
     def set_time(self, time):
@@ -1066,6 +1091,9 @@ class Pet(Item):
         self.stats = {"happiness": 5, "hunger": 5, "comfort": 5, "anger": 5, "thirst": 5, "energy": 5}
         self.emotion = "happy"
         self.times = []
+
+        self.pause_time = [7, 0, 0]
+
         self.ball_active = False
 
     def __str__(self):
@@ -1345,6 +1373,16 @@ class Pet(Item):
         Runs the chosen functions whenever the object is clicked,
         :return: None
         """
+        # set the sprite to the 'petting' sprite
+        # self.set_sprite(pygame.image.load(self.format_image(self.animal + "spritepetting")))
+        print("Happiness before: " + str(self.get_stat("happiness")))
+        # wait for half a second
+        pygame.time.delay(500)
+        # add 1 to happiness stat
+        self.set_stat("happiness", self.get_stat("happiness") + 1)
+        # change back to the current emotion
+        self.process_emotion(self.change_emotion())
+        print("Happiness after: " + str(self.get_stat("happiness")))
 
     def get_times(self):
         """
@@ -1352,6 +1390,13 @@ class Pet(Item):
         :return: self.times array
         """
         return self.times
+
+    def set_times(self, times):
+        """
+        Sets the value of self.times to a given value
+        :return: None
+        """
+        self.times = times
 
     def add_time(self, index, time):
         """
@@ -1485,6 +1530,21 @@ class Pet(Item):
         """
         return self.ball_active
 
+    def set_pause_time(self, value):
+        """
+        Sets self.pause_time to the given value
+        :param value: the given value
+        :return: None
+        """
+        self.pause_time = value
+
+    def get_pause_time(self):
+        """
+        Returns self.pause_time
+        :return: self.pause_time
+        """
+        return self.pause_time
+
 
 class Interactable(Item):
     def __init__(self, display, action, surface, game_inst):
@@ -1576,11 +1636,11 @@ class Interactable(Item):
         :return: None
         """
         if action == "buttonpause":
-            # TODO: add transparent cover over background
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
+            self.game_inst.get_pet(0).set_pause_time(self.game_inst.get_time())
+            self.game_inst.remove_decorations()
             self.game_inst.menu("pause")
-            # TODO: paused = True
         elif action == "buttonplay":
             invalid = False
             # if there's no new pet
@@ -1591,36 +1651,54 @@ class Interactable(Item):
                 names = c.execute('SELECT Name FROM pets;').fetchall()
                 for n in range(len(names)):
                     names[n] = names[n][0]
-                # if the entered name is in the database
-                if self.game_inst.get_menus()[0].get_text()[0].get_content() in names:
-                    # get all of that pet's data
-                    data = c.execute('SELECT * FROM pets WHERE Name="' + self.game_inst.get_menus()[0].get_text()[0].get_content() + '";').fetchall()
-                    # create an instance of Pet with that data
-                    self.game_inst.add_pet(data[0][0], data[0][1])
-                    self.game_inst.get_pet(0).set_stat("happiness", data[0][2])
-                    self.game_inst.get_pet(0).set_stat("hunger", data[0][3])
-                    self.game_inst.get_pet(0).set_stat("comfort", data[0][4])
-                    self.game_inst.get_pet(0).set_stat("anger", data[0][5])
-                    self.game_inst.get_pet(0).set_stat("thirst", data[0][6])
-                    self.game_inst.get_pet(0).set_stat("energy", data[0][7])
-                    self.game_inst.set_time([data[0][8], data[0][9], data[0][10]])
-                    conn.close()
-                    # TODO: position and draw the petS
-                else:
-                    # deletes old error messages
-                    if self.game_inst.get_decorations():
-                        self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
-                    # adds an error message
-                    self.game_inst.add_decoration("inuse")
-                    # scales, positions, and draws the error message
-                    deco = self.game_inst.get_decoration(0)
-                    deco.set_sprite(pygame.transform.scale(deco.get_sprite(), (int(deco.get_sprite().get_width() * 0.25), int(deco.get_sprite().get_height() * 0.25))))
-                    deco.set_pos([WIDTH // 2 - deco.get_sprite().get_width() // 2, 20])
-                    deco.draw()
-                    # redraws the screen, including the text in the text box
-                    self.game_inst.redraw()
-                    self.game_inst.get_menus()[0].get_text()[0].text_render()
+
+                # TODO: THIS THING \/\/\/
+                try:
+                    # if the entered name is in the database
+                    if self.game_inst.get_menus()[0].get_text()[0].get_content() in names:
+                        # get all of that pet's data
+                        data = c.execute('SELECT * FROM pets WHERE Name="' + self.game_inst.get_menus()[0].get_text()[0].get_content() + '";').fetchall()
+                        # create an instance of Pet with that data
+                        self.game_inst.add_pet(data[0][0], data[0][1])
+                        self.game_inst.get_pet(0).set_stat("happiness", data[0][2])
+                        self.game_inst.get_pet(0).set_stat("hunger", data[0][3])
+                        self.game_inst.get_pet(0).set_stat("comfort", data[0][4])
+                        self.game_inst.get_pet(0).set_stat("anger", data[0][5])
+                        self.game_inst.get_pet(0).set_stat("thirst", data[0][6])
+                        self.game_inst.get_pet(0).set_stat("energy", data[0][7])
+                        self.game_inst.set_time([data[0][8], data[0][9], data[0][10]])
+                        # changes the times list from a string (how it is stored in the db) to a list
+                        fix_times = ast.literal_eval(data[0][11])
+                        self.game_inst.get_pet(0).set_times(fix_times)
+                        conn.close()
+                        # TODO: position and draw the pets
+                    else:
+                        # deletes old error messages
+                        if self.game_inst.get_decorations():
+                            self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
+                        # adds an error message
+                        self.game_inst.add_decoration("inuse")
+                        # scales, positions, and draws the error message
+                        deco = self.game_inst.get_decoration(0)
+                        deco.set_sprite(pygame.transform.scale(deco.get_sprite(), (int(deco.get_sprite().get_width() * 0.25), int(deco.get_sprite().get_height() * 0.25))))
+                        deco.set_pos([WIDTH // 2 - deco.get_sprite().get_width() // 2, 20])
+                        deco.set_pos([WIDTH // 2 - deco.get_sprite().get_width() // 2, 20])
+                        deco.draw()
+                        # redraws the screen, including the text in the text box
+                        self.game_inst.redraw()
+                        self.game_inst.get_menus()[0].get_text()[0].text_render()
+                        invalid = True
+                except IndexError:
                     invalid = True
+                    self.game_inst.remove_menus()
+                    self.game_inst.clear_screen()
+                    pause_time = self.game_inst.get_pet(0).get_pause_time()
+                    pause_time = [pause_time[0], pause_time[1], pause_time[2] - 20]
+                    self.game_inst.set_time(pause_time)
+                    self.game_inst.create_visual_clock()
+                    self.game_inst.menu("playscreen")
+
+            # valid pet name, so go!
             if not invalid:
                 if self.game_inst.get_decorations():
                     self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
@@ -1629,7 +1707,6 @@ class Interactable(Item):
                 self.game_inst.remove_menus()
                 self.game_inst.clear_screen()
                 self.game_inst.menu("playscreen")
-
                 self.game_inst.add_clock()
             # TODO: set the clock time to the last time the user had
         elif action == "buttonnew":
@@ -1690,7 +1767,7 @@ class Interactable(Item):
                         c = conn.cursor()
                         # add data as entry in database
                         c.execute('INSERT INTO pets VALUES ("' + self.game_inst.get_pet_data()[0] + '", "' + self.game_inst.get_pet_data()[1] +
-                                  '", 5, 5, 5, 5, 5, 5, 0, 0, 0);')
+                                  '", 5, 5, 5, 5, 5, 5, 0, 0, 0, "[]");')
                         conn.commit()
                         conn.close()
                         # start playing game
@@ -1709,7 +1786,7 @@ class Interactable(Item):
                     self.game_inst.clear_screen()
                     self.game_inst.menu("start")
         elif action == "buttonresume":
-            # TODO: paused = False
+            # paused = False
             self.game_inst.set_running(True)
             self.button("buttonplay")
         elif action == "buttonback":
