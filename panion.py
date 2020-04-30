@@ -92,7 +92,6 @@ class Game:
         self.create_visual_clock()
         # main game loop
         while self.running:
-            paused = False
             # check for events
             self.event_handler()
             # change real time to 'game time'
@@ -146,7 +145,7 @@ class Game:
 
             # if paused, do nothing
             except IndexError:
-                paused = True
+                pass
 
             # checking for repeated actions
             for event in self.pets[0].get_times():
@@ -202,9 +201,8 @@ class Game:
         for event in pygame.event.get():
             # if the event is clicking the exit button:
             if event.type == QUIT:
-                # stop both loops so that the program can quit
-                self.startrun = False
-                self.running = False
+                # end the program
+                self.end()
             # if the mouse is clicked (on the up of the click)
             elif event.type == MOUSEBUTTONUP:
                 none_clicked = True
@@ -268,8 +266,14 @@ class Game:
                         reverse = [-(reverse[0]) + WIDTH//2, -(reverse[1]) + HEIGHT//2]
                         # remove the ball
                         del self.decorations[len(self.decorations) - 1]
+                        # change the pet's sprite to hold the ball
+                        self.pets[0].set_sprite(pygame.image.load(self.pets[0].format_image(self.pets[0].get_animal() + "spriteball")))
+                        self.redraw()
                         # return the pet to its original position
                         self.pets[0].travel(reverse)
+                        # change the pet's sprite back to normal
+                        self.pets[0].set_sprite(pygame.image.load(self.pets[0].format_image(self.pets[0].get_animal() + "sprite")))
+                        self.redraw()
 
             # if a key is pressed
             elif event.type == KEYDOWN:
@@ -296,8 +300,8 @@ class Game:
                         self.redraw()
                         self.menus[0].get_text()[0].text_render()
                 else:
-                    if event.key == K_a:
-                        self.pets[0].sleep()
+                    if event.key == K_b:
+                        self.menus[0].get_buttons()[2].clicked(pygame.mouse.get_pos())
 
     def end(self):
         """
@@ -642,7 +646,7 @@ class Menu:
             self.add_decoration("logo")  # panion logo at top
             self.add_button("buttonnew")
             self.add_button("buttonold")
-            self.add_button("buttonsettings")
+            self.add_button("buttonhelp")
             # change the size of all the buttons
             for i in range(len(self.buttons)):
                 button = self.buttons[i].get_sprite()
@@ -737,7 +741,7 @@ class Menu:
             # add all parts of the menu
             self.add_decoration("paused")
             self.add_button("buttonresume")
-            self.add_button("buttonsettings")
+            self.add_button("buttonhelp")
             self.add_button("buttonquit")
             # scale the buttons
             for i in range(len(self.buttons)):
@@ -753,26 +757,26 @@ class Menu:
             self.buttons[0].draw()
             self.buttons[1].draw()
             self.buttons[2].draw()
-        elif self.menu == "settings":
+        elif self.menu == "help":
             # add all parts of menu
-            self.add_decoration("settings")
-            # self.add_button("volume")
-            # TODO: add volume into Interactable class
+            self.add_decoration("help")
+            self.add_decoration("helptext")
             self.add_button("buttondone")
             # scale the buttons
-            for i in range(len(self.buttons)):
-                button = self.buttons[i].get_sprite()
-                self.buttons[i].set_sprite(pygame.transform.scale(button, (int(button.get_width() * 0.4), int(button.get_height() * 0.4))))
-            # scale settings text
+            for i in self.buttons:
+                i.set_sprite(pygame.transform.scale(i.get_sprite(), (int(i.get_sprite().get_width() * 0.4), int(i.get_sprite().get_height() * 0.4))))
+            # scale help text
             deco = self.decorations[0].get_sprite()
             self.decorations[0].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.4), int(deco.get_height() * 0.4))))
-            # x value for centering buttons
-            x = WIDTH//2 - self.buttons[0].get_sprite().get_width()//2
+            deco = self.decorations[1].get_sprite()
+            self.decorations[1].set_sprite(pygame.transform.scale(deco, (int(deco.get_width() * 0.25), int(deco.get_height() * 0.25))))
             # set positions of all parts of menu
             self.decorations[0].set_pos([WIDTH//2 - self.decorations[0].get_sprite().get_width()//2, 20])
-            self.buttons[0].set_pos([x, 600])   # change the 0 to a 1 if I include volume
+            self.decorations[1].set_pos([WIDTH//2 - self.decorations[1].get_sprite().get_width()//2, 100])
+            self.buttons[0].set_pos([WIDTH//2 - self.buttons[0].get_sprite().get_width()//2, 600])
             # draw all parts of menu
             self.decorations[0].draw()
+            self.decorations[1].draw()
             self.buttons[0].draw()
         elif self.menu == "playscreen":
             # add all parts of menu
@@ -1024,7 +1028,7 @@ class Item:
         # if there are no current pets
         if not self.game_inst.get_pets():
             # random button
-            ends = ["cat", "dog"]   # TODO: draw duck buttons and add duck here
+            ends = ["cat", "dog", "duck"]
             return "assets/" + str(image) + random.choice(ends) + ".png"
         # if there is a current pet, use this pet's buttons
         return "assets/" + str(image) + str(self.game_inst.get_pet(0).get_animal()) + ".png"
@@ -1374,15 +1378,18 @@ class Pet(Item):
         :return: None
         """
         # set the sprite to the 'petting' sprite
-        # self.set_sprite(pygame.image.load(self.format_image(self.animal + "spritepetting")))
-        print("Happiness before: " + str(self.get_stat("happiness")))
+        self.set_sprite(pygame.image.load(self.format_image(self.animal + "spritepetting")))
+        self.game_inst.redraw()
+        pygame.display.update()
         # wait for half a second
         pygame.time.delay(500)
         # add 1 to happiness stat
         self.set_stat("happiness", self.get_stat("happiness") + 1)
         # change back to the current emotion
+        self.set_sprite(pygame.image.load(self.format_image(self.animal + "sprite")))
         self.process_emotion(self.change_emotion())
-        print("Happiness after: " + str(self.get_stat("happiness")))
+        self.game_inst.redraw()
+        pygame.display.update()
 
     def get_times(self):
         """
@@ -1566,33 +1573,66 @@ class Interactable(Item):
         :return: None
         """
         if self.action == "watertank":
+            # change the sprite to have a white outline to show activity
+            self.set_sprite(pygame.image.load(self.format_image("watertankselected")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 4), int(self.get_sprite().get_height() * 4))))
+            self.game_inst.redraw()
             # go to the water
             self.game_inst.get_pet(0).travel(pos)
             # set thirst stat to full
             self.game_inst.get_pet(0).set_stat("thirst", 10)
+            # change the sprite to be inactive again
+            self.set_sprite(pygame.image.load(self.format_image("watertank")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 4), int(self.get_sprite().get_height() * 4))))
+            self.game_inst.redraw()
             # check for repeat actions
             self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "drink")
             # change emotions
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "foodbowl":
+            # change the sprite to have a white outline to show activity
+            self.set_sprite(pygame.image.load(self.format_image("foodbowlselected")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 4), int(self.get_sprite().get_height() * 4))))
+            self.game_inst.redraw()
             # go to the food
             self.game_inst.get_pet(0).travel(pos)
             # set hunger stat to full
             self.game_inst.get_pet(0).set_stat("hunger", 10)
+            # change the sprite to be inactive again
+            self.set_sprite(pygame.image.load(self.format_image("foodbowl")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 4), int(self.get_sprite().get_height() * 4))))
+            self.game_inst.redraw()
             # check for repeat actions
             self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "eat")
             # change emotions
             self.game_inst.get_pet(0).process_emotion(self.game_inst.get_pet(0).change_emotion())
         if self.action == "bed":
+            # change the sprite to have a white outline to show activity
+            self.set_sprite(pygame.image.load(self.format_image("bedselected")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 2), int(self.get_sprite().get_height() * 2))))
+            self.game_inst.redraw()
             # go to bed
             self.game_inst.get_pet(0).travel(pos)
             # check for repeat actions
             self.game_inst.get_pet(0).check_repeat(self.game_inst.correct_time(), "sleep")
             # sleep
             self.game_inst.get_pet(0).sleep()
+            # change the sprite to be inactive again
+            self.set_sprite(pygame.image.load(self.format_image("bed")))
+            self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 2), int(self.get_sprite().get_height() * 2))))
+            self.game_inst.redraw()
         if self.action == "ball":
             # swap 'ball_active'
             self.game_inst.get_pet(0).set_ball_active(not self.game_inst.get_pet(0).get_ball_active())
+            # swap sprite between active and not
+            if self.game_inst.get_pet(0).get_ball_active():
+                self.set_sprite(pygame.image.load(self.format_image("ballselected")))
+                self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 2), int(self.get_sprite().get_height() * 2))))
+                self.game_inst.redraw()
+            else:
+                self.set_sprite(pygame.image.load(self.format_image("ball")))
+                self.set_sprite(pygame.transform.scale(self.get_sprite(), (int(self.get_sprite().get_width() * 2), int(self.get_sprite().get_height() * 2))))
+                self.game_inst.redraw()
         # if a sprite is clicked
         if "sprite" in self.action:
             # if the main game is not running (i.e. if the pet is being selected)
@@ -1624,7 +1664,6 @@ class Interactable(Item):
                 else:
                     pass
             else:
-                # TODO: pet the pet
                 pass
         if "button" in self.action:
             self.button(self.action)
@@ -1793,10 +1832,10 @@ class Interactable(Item):
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
             self.game_inst.menu("start")
-        elif action == "buttonsettings":
+        elif action == "buttonhelp":
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
-            self.game_inst.menu("settings")
+            self.game_inst.menu("help")
 
     def get_display(self):
         """
