@@ -244,9 +244,9 @@ class Game:
                         # if it is, run clicked() for that pet
                         pet.clicked(pygame.mouse.get_pos())
                 if none_clicked and self.running:
-                    if not self.pets[0].get_ball_active():
+                    if not self.pets[0].get_ball_active() and not self.paused:
                         self.pets[0].travel(pygame.mouse.get_pos())
-                    else:
+                    elif not self.paused:
                         point = pygame.mouse.get_pos()
                         self.add_decoration("ball")
                         ball = self.decorations[len(self.decorations) - 1]
@@ -301,10 +301,8 @@ class Game:
                         self.redraw()
                         self.menus[0].get_text()[0].text_render()
                 else:
-                    if event.key == K_b and self.running:
+                    if event.key == K_b and self.running and not self.paused:
                         self.menus[0].get_buttons()[2].clicked(pygame.mouse.get_pos())
-                    elif event.key == K_s:
-                        print(self.pets[0])
 
     def end(self):
         """
@@ -621,6 +619,13 @@ class Game:
         """
         self.pet_data[index] = value
 
+    def swap_paused(self):
+        """
+        Swaps the value of self.paused
+        :return: None
+        """
+        self.paused = not self.paused
+
 
 class Menu:
     def __init__(self, menu, surface, game_inst):
@@ -811,7 +816,6 @@ class Menu:
             self.buttons[4].set_pos(WATER_START)
             self.game_inst.get_pets()[0].set_pos([WIDTH//2 - self.game_inst.get_pets()[0].get_sprite().get_width()//2, HEIGHT//2 - self.game_inst.get_pets()[0].get_sprite().get_height()//2])
             # draw all parts of menu
-            # print(self.game_inst.get_pets()[0])
             self.decorations[0].draw()
             [i.draw() for i in self.buttons]
             self.game_inst.get_pets()[0].draw()
@@ -1680,6 +1684,7 @@ class Interactable(Item):
         if action == "buttonpause":
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
+            self.game_inst.swap_paused()
             self.game_inst.get_pet(0).set_pause_time(self.game_inst.get_time())
             self.game_inst.remove_decorations()
             self.game_inst.menu("pause")
@@ -1694,7 +1699,6 @@ class Interactable(Item):
                 for n in range(len(names)):
                     names[n] = names[n][0]
 
-                # TODO: THIS THING \/\/\/
                 try:
                     # if the entered name is in the database
                     if self.game_inst.get_menus()[0].get_text()[0].get_content() in names:
@@ -1713,7 +1717,6 @@ class Interactable(Item):
                         fix_times = ast.literal_eval(data[0][11])
                         self.game_inst.get_pet(0).set_times(fix_times)
                         conn.close()
-                        # TODO: position and draw the pets
                     else:
                         # deletes old error messages
                         if self.game_inst.get_decorations():
@@ -1750,7 +1753,6 @@ class Interactable(Item):
                 self.game_inst.clear_screen()
                 self.game_inst.menu("playscreen")
                 self.game_inst.add_clock()
-            # TODO: set the clock time to the last time the user had
         elif action == "buttonnew":
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
@@ -1804,23 +1806,22 @@ class Interactable(Item):
                         self.game_inst.get_menus()[0].get_text()[0].text_render()
                     # if the chosen name has not already been used
                     else:
-                        # connect to the database
-                        conn = sqlite3.connect('pets.db')
-                        c = conn.cursor()
-                        # add data as entry in database
-                        c.execute('INSERT INTO pets VALUES ("' + self.game_inst.get_pet_data()[0] + '", "' + self.game_inst.get_pet_data()[1] +
-                                  '", 5, 5, 5, 5, 5, 5, 0, 0, 0, "[]");')
-                        conn.commit()
-                        conn.close()
-                        # start playing game
-                        if self.game_inst.get_decorations():
-                            self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
-                        self.game_inst.add_pet(self.game_inst.get_pet_data()[0], self.game_inst.get_pet_data()[1])
-                        # TODO: set all stats to the values from the database
-                        conn.close()
-                        # TODO: position and draw the pets
-                        self.game_inst.get_pets()[0].draw()
-                        self.button("buttonplay")
+                        if self.game_inst.get_menus()[0].get_text()[0].get_content() != "":
+                            # connect to the database
+                            conn = sqlite3.connect('pets.db')
+                            c = conn.cursor()
+                            # add data as entry in database
+                            c.execute('INSERT INTO pets VALUES ("' + self.game_inst.get_pet_data()[0] + '", "' + self.game_inst.get_pet_data()[1] +
+                                      '", 5, 5, 5, 5, 5, 5, 0, 0, 0, "[]");')
+                            conn.commit()
+                            conn.close()
+                            # start playing game
+                            if self.game_inst.get_decorations():
+                                self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
+                            self.game_inst.add_pet(self.game_inst.get_pet_data()[0], self.game_inst.get_pet_data()[1])
+                            conn.close()
+                            self.game_inst.get_pets()[0].draw()
+                            self.button("buttonplay")
                 # else on settings menu in beginning
                 else:
                     # go back to start
@@ -1828,7 +1829,7 @@ class Interactable(Item):
                     self.game_inst.clear_screen()
                     self.game_inst.menu("start")
         elif action == "buttonresume":
-            # paused = False
+            self.game_inst.swap_paused()
             self.game_inst.set_running(True)
             self.button("buttonplay")
         elif action == "buttonback":
