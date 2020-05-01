@@ -142,6 +142,7 @@ class Game:
                     # change all of these statistics every minute
                     self.pets[0].set_stat("hunger", self.pets[0].get_stat("hunger") - 1)
                     self.pets[0].set_stat("thirst", self.pets[0].get_stat("thirst") - 1)
+                    self.pets[0].set_stat("energy", self.pets[0].get_stat("energy") - 1)
 
             # if paused, do nothing
             except IndexError:
@@ -300,8 +301,10 @@ class Game:
                         self.redraw()
                         self.menus[0].get_text()[0].text_render()
                 else:
-                    if event.key == K_b:
+                    if event.key == K_b and self.running:
                         self.menus[0].get_buttons()[2].clicked(pygame.mouse.get_pos())
+                    elif event.key == K_s:
+                        print(self.pets[0])
 
     def end(self):
         """
@@ -1831,6 +1834,9 @@ class Interactable(Item):
         elif action == "buttonback":
             self.game_inst.remove_menus()
             self.game_inst.clear_screen()
+            # deletes old error messages
+            if self.game_inst.get_decorations():
+                self.game_inst.remove_decoration(self.game_inst.get_decoration(0))
             self.game_inst.menu("start")
         elif action == "buttonhelp":
             self.game_inst.remove_menus()
