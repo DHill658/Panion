@@ -968,8 +968,6 @@ class Menu:
         :param button: Function of the new button
         :return: None
         """
-        # data = Interactable(button, button, self.surface) if not pet_chosen else Interactable(button, button, self.surface), pet
-        # self.buttons.append(*data)
         self.buttons.append(Interactable(button, button, self.surface, self.game_inst))
 
     def get_decorations(self):
@@ -1178,26 +1176,6 @@ class Pet(Item):
 
         # loops for the distance (divided by a factor)
         for a in range(int(distance)//20):
-            # if background.get_pos()[0] > 0 or background.get_pos()[0] < -(background.get_sprite().get_width() - WIDTH):
-            #     # self.set_pos([self.position[0] - (xDiff * 20), self.position[1]])
-            #     x_edge = True
-            #     background.set_pos([0, background.get_pos()[1]])
-            # if background.get_pos()[1] > 0 or background.get_pos()[1] < -(background.get_sprite().get_height() - HEIGHT):
-            #     # self.set_pos([self.position[0], self.position[1] - (yDiff * 20)])
-            #     y_edge = True
-            #     background.set_pos([background.get_pos()[0], 0])
-            # # move the background in the opposite direction of the intended movement direction by xDiff and yDiff (multiplied by a factor)
-            # if x_edge is False and y_edge is False:
-            #     self.set_pos([WIDTH//2 - self.sprite.get_width()//2, HEIGHT//2 - self.sprite.get_height()//2])
-            #     background.set_pos([background.get_pos()[0] - (xDiff * 20), background.get_pos()[1] - (yDiff * 20)])
-            # if x_edge and y_edge is False:
-            #     self.set_pos([self.position[0] + (xDiff * 20), self.position[1]])
-            #     background.set_pos([0, background.get_pos()[1] - (yDiff * 20)])
-            # if y_edge and x_edge is False:
-            #     self.set_pos([self.position[0], self.position[1] + (yDiff * 20)])
-            #     background.set_pos([background.get_pos()[0] - (xDiff * 20), 0])
-            # if x_edge and y_edge:
-            #     self.set_pos([self.position[0] + (xDiff * 20), self.position[1] + (yDiff * 20)])
 
             # if the pet is within the bounds, move them
             if (WIDTH//2 >= background.get_pos()[0] >= -(background.get_sprite().get_width()-WIDTH//2)) and (HEIGHT//2 >= background.get_pos()[1] >= -(background.get_sprite().get_height()-HEIGHT//2)):
